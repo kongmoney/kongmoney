@@ -1,0 +1,3 @@
+kongmoney-google-v2
+2026-09-29
+Full upload baseline with Google Sheets connector.
