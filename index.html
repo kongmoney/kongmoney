@@ -97,7 +97,82 @@
       </div>
     </div>
 
-    <main class="content-grid">
+    <div class="view-switch-wrap" aria-label="화면 보기 방식">
+      <div class="view-switch">
+        <button id="cardViewBtn" class="view-switch-btn active" type="button" data-view-mode="card">카드 보기</button>
+        <button id="sheetViewBtn" class="view-switch-btn" type="button" data-view-mode="settlement">정산표 보기</button>
+      </div>
+      <span class="view-switch-help">정산표는 월 전체 흐름을 한눈에 보여줘요.</span>
+    </div>
+
+    <section id="settlementView" class="settlement-view" hidden>
+      <section class="settlement-hero card note-card">
+        <div>
+          <span class="section-kicker">MONTHLY SETTLEMENT</span>
+          <h2 id="settlementTitle">2026년 9월 정산표</h2>
+          <p>이번 달 지출부터 대출·수고비·CE 자동이체까지 한 번에 확인해요.</p>
+        </div>
+        <div class="settlement-hero-total">
+          <span>이번 달 전체 지출</span>
+          <strong id="settlementGrandTotal">-</strong>
+        </div>
+      </section>
+
+      <section class="settlement-top-grid">
+        <article class="settlement-person-card sh">
+          <span>SH 최종 부담</span><strong id="settlementSHFinal">-</strong><small id="settlementSHBasic">기본 부담 -</small>
+        </article>
+        <article class="settlement-person-card jh">
+          <span>JH 최종 입금</span><strong id="settlementJHFinal">-</strong><small id="settlementJHBasic">기본 부담 -</small>
+        </article>
+        <article class="settlement-person-card ce">
+          <span>CE 최종 정산</span><strong id="settlementCEFinal">-</strong><small id="settlementCEBasic">기본 부담 -</small>
+        </article>
+        <article class="settlement-person-card carry">
+          <span>다음 달 이월</span><strong id="settlementCarryOut">-</strong><small id="settlementTransfer">자동이체 -</small>
+        </article>
+      </section>
+
+      <section class="card note-card settlement-section">
+        <div class="settlement-section-head">
+          <div><span class="section-kicker">EXPENSE BREAKDOWN</span><h3>지출 내역 및 분담</h3></div>
+          <span id="settlementExpenseCount" class="settlement-count">0건</span>
+        </div>
+        <div class="settlement-table-scroll">
+          <table class="settlement-table">
+            <thead><tr><th>대분류</th><th>소분류</th><th>내역/비고</th><th class="num">총 금액</th><th>분담</th><th class="num sh-col">SH</th><th class="num jh-col">JH</th><th class="num ce-col">CE</th></tr></thead>
+            <tbody id="settlementExpenseBody"></tbody>
+            <tfoot><tr><th colspan="3">지출 합계</th><th id="settlementLivingTotal" class="num">-</th><th>-</th><th id="settlementSHExpense" class="num sh-col">-</th><th id="settlementJHExpense" class="num jh-col">-</th><th id="settlementCEExpense" class="num ce-col">-</th></tr></tfoot>
+          </table>
+        </div>
+      </section>
+
+      <section class="card note-card settlement-section final-settlement-card">
+        <div class="settlement-section-head">
+          <div><span class="section-kicker">FINAL SETTLEMENT</span><h3>최종 정산</h3></div>
+          <span class="settlement-badge">자동 계산</span>
+        </div>
+        <div class="settlement-table-scroll">
+          <table class="settlement-table final-table">
+            <thead><tr><th>구분</th><th class="num sh-col">SH</th><th class="num jh-col">JH</th><th class="num ce-col">CE</th><th>정산 메모</th></tr></thead>
+            <tbody>
+              <tr><td>생활비 및 기타</td><td id="finalLivingSH" class="num sh-col">-</td><td id="finalLivingJH" class="num jh-col">-</td><td id="finalLivingCE" class="num ce-col">-</td><td>지출별 분담 기준 합계</td></tr>
+              <tr><td>대출 분담</td><td id="finalLoanSH" class="num sh-col">-</td><td id="finalLoanJH" class="num jh-col">-</td><td id="finalLoanCE" class="num ce-col">-</td><td>SH · JH 1/2씩 부담</td></tr>
+              <tr><td>수고비 조정</td><td id="finalLaborSH" class="num sh-col">-</td><td id="finalLaborJH" class="num jh-col">-</td><td id="finalLaborCE" class="num ce-col">-</td><td>SH 부담 감소 / JH·CE 가산</td></tr>
+              <tr class="final-emphasis"><td>최종 부담·입금액</td><td id="finalSH" class="num sh-col">-</td><td id="finalJH" class="num jh-col">-</td><td id="finalCE" class="num ce-col">-</td><td>이번 달 최종 정산액</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="settlement-carry-strip">
+          <div><span>전월 이월</span><strong id="finalCarryIn">-</strong></div>
+          <b>+</b><div><span>CE 자동이체</span><strong id="finalAutoTransfer">-</strong></div>
+          <b>−</b><div><span>CE 정산액</span><strong id="finalCESettlement">-</strong></div>
+          <b>=</b><div class="result"><span>다음 달 이월</span><strong id="finalCarryOut">-</strong></div>
+        </div>
+      </section>
+    </section>
+
+    <main id="cardView" class="content-grid">
       <section class="content-main">
         <section class="summary-grid" aria-label="월 요약">
           <article class="summary-card mint">
@@ -375,6 +450,6 @@
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
   <div class="build-version" aria-label="버전">v5.9.0</div>
-  <script src="/assets/js/app-v5.9.0.js?v=590" type="module"></script>
+  <script src="/assets/js/app-v5.10.0.js?v=5100" type="module"></script>
 </body>
 </html>

@@ -40,7 +40,7 @@ export async function onRequestGet({ request, env }) {
         previous: previousSummary || null,
       },
       meta,
-      expenses: expenses.map(({ manager, memberA, memberB, ...rest }) => rest),
+      expenses,
       loan: loan || { principal: 0, interest: 0, rate: 0, balance: 0, total: 0 },
     });
   } catch (err) {

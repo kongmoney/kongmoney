@@ -457,3 +457,35 @@ button:disabled{opacity:.5;cursor:not-allowed;transform:none!important}
 .year-picker-row button:hover{background:#eff9f5;transform:translateY(-1px)}
 .year-picker-row button.active{background:#dff2ea;color:#315f51;border-color:#b9ddcf;box-shadow:inset 0 0 0 1px rgba(84,137,117,.08)}
 @media(max-width:520px){.year-picker-row{gap:6px;margin-bottom:8px;padding-bottom:8px}.year-picker-row button{font-size:12px;padding:8px 6px;border-radius:12px}}
+
+
+/* v5.10.0 - card / monthly settlement table view */
+.view-switch-wrap{display:flex;align-items:center;justify-content:space-between;gap:14px;margin:0 0 16px}
+.view-switch{display:inline-flex;padding:4px;background:rgba(255,255,255,.78);border:1px solid var(--line);border-radius:999px;box-shadow:var(--shadow-soft)}
+.view-switch-btn{border:0;background:transparent;color:#766b62;font:inherit;font-size:13px;font-weight:700;padding:9px 15px;border-radius:999px;cursor:pointer;transition:.16s ease}
+.view-switch-btn.active{background:#333;color:#fff;box-shadow:0 5px 14px rgba(51,51,51,.14)}
+.view-switch-help{font-size:12px;color:var(--muted)}
+.settlement-view{display:flex;flex-direction:column;gap:16px;margin-bottom:22px}
+.settlement-hero{display:flex;align-items:center;justify-content:space-between;gap:24px;padding:24px 26px;background:linear-gradient(135deg,#fffdfa 0%,#f7fbf9 100%)}
+.settlement-hero h2{font-size:30px;letter-spacing:-.03em;margin:5px 0 6px}.settlement-hero p{margin:0;color:var(--muted);font-size:14px}
+.settlement-hero-total{text-align:right;min-width:220px;padding:16px 20px;background:#eef8f4;border:1px solid #d8ebe2;border-radius:20px}
+.settlement-hero-total span{display:block;font-size:12px;color:#5d756c;font-weight:700;margin-bottom:6px}.settlement-hero-total strong{font-size:28px;letter-spacing:-.03em}
+.settlement-top-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.settlement-person-card{border-radius:22px;padding:18px 18px 16px;border:1px solid rgba(51,51,51,.06);box-shadow:var(--shadow-soft)}
+.settlement-person-card.sh{background:#fff1f4}.settlement-person-card.jh{background:#eff8fd}.settlement-person-card.ce{background:#fff9df}.settlement-person-card.carry{background:#eff9f5}
+.settlement-person-card span{display:block;font-size:12px;color:#6f655d;font-weight:700}.settlement-person-card strong{display:block;font-size:24px;margin:8px 0 6px;letter-spacing:-.03em}.settlement-person-card small{font-size:11px;color:var(--muted)}
+.settlement-section{padding:0;overflow:hidden}.settlement-section-head{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;padding:20px 22px 16px}.settlement-section-head h3{margin:4px 0 0;font-size:23px;letter-spacing:-.025em}
+.settlement-count,.settlement-badge{font-size:11px;font-weight:700;color:#65736d;background:#f1f7f4;border:1px solid #dce9e3;padding:7px 10px;border-radius:999px}
+.settlement-table-scroll{overflow:auto;border-top:1px solid var(--line)}
+.settlement-table{width:100%;min-width:940px;border-collapse:separate;border-spacing:0;font-size:13px}
+.settlement-table th,.settlement-table td{padding:12px 13px;border-bottom:1px solid #eee6de;text-align:left;white-space:nowrap;background:#fff}
+.settlement-table thead th{position:sticky;top:0;z-index:1;background:#2f3f54;color:#fff;font-size:12px;font-weight:700}.settlement-table thead th:first-child{padding-left:18px}
+.settlement-table tbody tr:hover td{background:#fffaf4}.settlement-table tfoot th{background:#f4f6f7;font-weight:800;border-bottom:0}
+.settlement-table .num{text-align:right;font-variant-numeric:tabular-nums}.settlement-table .sh-col{background:#fff9fa}.settlement-table .jh-col{background:#f7fbfe}.settlement-table .ce-col{background:#fffdf3}
+.settlement-table thead .sh-col,.settlement-table thead .jh-col,.settlement-table thead .ce-col{background:#2f3f54}
+.table-category{font-size:11px;font-weight:700;padding:5px 8px;border-radius:999px;background:#f6f0e9;color:#695f56}.settlement-empty{text-align:center!important;color:var(--muted);padding:28px!important}
+.final-table tbody td:first-child{font-weight:700}.final-table .final-emphasis td{font-weight:800;background:#f7f4ec;border-top:2px solid #dbd1c6}.final-table .final-emphasis .sh-col{background:#fff0f3}.final-table .final-emphasis .jh-col{background:#eef8fe}.final-table .final-emphasis .ce-col{background:#fff9df}
+.settlement-carry-strip{display:grid;grid-template-columns:1fr auto 1fr auto 1fr auto 1.15fr;gap:10px;align-items:center;padding:18px 22px 22px;background:#fffaf2}
+.settlement-carry-strip>div{padding:12px 14px;border:1px solid var(--line);background:#fff;border-radius:16px}.settlement-carry-strip span{display:block;font-size:11px;color:var(--muted);margin-bottom:5px}.settlement-carry-strip strong{font-size:16px}.settlement-carry-strip>b{color:#b8aaa0;text-align:center}.settlement-carry-strip .result{background:#eaf7f1;border-color:#d2e9df}.settlement-carry-strip .result strong{color:#315f52}
+@media(max-width:900px){.settlement-top-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.view-switch-help{display:none}.settlement-hero{align-items:flex-start}.settlement-hero-total{min-width:190px}}
+@media(max-width:620px){.view-switch-wrap{margin:0 0 12px}.view-switch{width:100%}.view-switch-btn{flex:1;padding:9px 10px}.settlement-view{gap:12px}.settlement-hero{padding:18px;display:block}.settlement-hero h2{font-size:24px}.settlement-hero p{font-size:12px}.settlement-hero-total{margin-top:14px;text-align:left;min-width:0;padding:13px 15px}.settlement-hero-total strong{font-size:24px}.settlement-top-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.settlement-person-card{padding:14px}.settlement-person-card strong{font-size:19px}.settlement-section-head{padding:17px 16px 13px}.settlement-section-head h3{font-size:20px}.settlement-table{font-size:12px;min-width:850px}.settlement-table th,.settlement-table td{padding:10px}.settlement-carry-strip{display:flex;overflow-x:auto;padding:14px 16px 18px;gap:7px}.settlement-carry-strip>div{min-width:130px;flex:0 0 auto}.settlement-carry-strip>b{align-self:center}}
