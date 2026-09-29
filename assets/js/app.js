@@ -238,6 +238,13 @@ async function saveLoan(payload){
   return body;
 }
 
+async function resetLoan(month){
+  const res=await fetch('/api/loan',{method:'DELETE',headers:{'content-type':'application/json'},body:JSON.stringify({month})});
+  const body=await res.json().catch(()=>({}));
+  if(!res.ok || body.ok===false) throw new Error(body.error || `대출내역 초기화 실패 (${res.status})`);
+  return body;
+}
+
 function updateLoanPreview(){
   const principal=Number(digitsOnly($('loanPrincipalInput')?.value)||0);
   const interest=Number(digitsOnly($('loanInterestInput')?.value)||0);
@@ -387,11 +394,13 @@ $('loanForm').addEventListener('submit',async(e)=>{
   const saveBtn=$('loanSaveBtn');
   const principal=Number(digitsOnly($('loanPrincipalInput').value)||0);
   const interest=Number(digitsOnly($('loanInterestInput').value)||0);
-  const balance=Number(digitsOnly($('loanBalanceInput').value)||0);
-  const ratePercent=parseRateInput($('loanRateInput').value);
+  const balanceText=digitsOnly($('loanBalanceInput').value);
+  const balance=balanceText === '' ? null : Number(balanceText);
+  const rateText=String($('loanRateInput').value||'').trim();
+  const ratePercent=rateText === '' ? null : parseRateInput(rateText);
   saveBtn.disabled=true; saveBtn.textContent='저장 중…';
   try{
-    await saveLoan({month:state.month,principal,interest,rate:ratePercent/100,balance});
+    await saveLoan({month:state.month,principal,interest,rate:ratePercent===null?null:ratePercent/100,balance});
     loanDlg.close();
     showToast('대출내역을 Google Sheet에 반영했습니다.');
     rememberMonth(state.month);
@@ -400,6 +409,22 @@ $('loanForm').addEventListener('submit',async(e)=>{
     showToast(err.message || '대출내역 저장에 실패했습니다.','error');
   }finally{
     saveBtn.disabled=false; saveBtn.textContent='Google Sheet에 저장';
+  }
+});
+
+$('loanResetBtn').addEventListener('click', async()=>{
+  if(!confirm(`${formatMonth(state.month)} 대출 입력값을 초기화할까요?\n상환 원금과 이자는 0원으로, 잔액은 전월 잔액으로 되돌립니다.`)) return;
+  const btn=$('loanResetBtn');
+  btn.disabled=true; btn.textContent='초기화 중…';
+  try{
+    await resetLoan(state.month);
+    loanDlg.close();
+    showToast(`${formatMonth(state.month)} 대출내역을 초기화했습니다.`);
+    await load();
+  }catch(err){
+    showToast(err.message || '대출내역 초기화에 실패했습니다.','error');
+  }finally{
+    btn.disabled=false; btn.textContent='이 달 대출내역 초기화';
   }
 });
 

@@ -361,3 +361,9 @@ button{appearance:none}
   .trend-summary span{margin:0}.trend-summary strong{font-size:16px}
   .loan-trend-chart{min-height:220px;padding:4px}.trend-svg{min-height:210px}
 }
+
+
+/* v5.3.1 - loan reset */
+.danger-outline-btn{margin-top:10px;border:1px solid #e7b7c0;background:#fff7f8;color:#a84559;border-radius:999px;padding:13px 18px;font-weight:700;cursor:pointer}
+.danger-outline-btn:hover{background:#fff0f3;transform:translateY(-1px)}
+.danger-outline-btn:disabled{opacity:.55;cursor:wait;transform:none}

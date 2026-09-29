@@ -262,13 +262,14 @@
         </div>
         <button id="closeLoanDialog" class="close-btn" type="button" aria-label="닫기">×</button>
       </div>
-      <label>상환 원금<input id="loanPrincipalInput" name="principal" class="numeric-only" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="off" required /></label>
-      <label>납부 이자<input id="loanInterestInput" name="interest" class="numeric-only" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="off" required /></label>
+      <label>상환 원금<input id="loanPrincipalInput" name="principal" class="numeric-only" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="off" placeholder="비우면 0원" /></label>
+      <label>납부 이자<input id="loanInterestInput" name="interest" class="numeric-only" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="off" placeholder="비우면 0원" /></label>
       <label>적용 금리 (%)<input id="loanRateInput" name="rate" type="text" inputmode="decimal" autocomplete="off" placeholder="예: 3.8" /></label>
-      <label>상환 후 잔액<input id="loanBalanceInput" name="balance" class="numeric-only" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="off" required /></label>
+      <label>상환 후 잔액<input id="loanBalanceInput" name="balance" class="numeric-only" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="off" placeholder="비우면 전월잔액 - 원금" /></label>
       <div class="calculated-field"><span>월 상환액</span><strong id="loanTotalPreview">0원</strong><small>상환 원금 + 납부 이자로 자동 계산</small></div>
       <button id="loanSaveBtn" class="primary-btn full" type="submit">Google Sheet에 저장</button>
-      <p class="helper-text">현재 조회 월의 대출내역 행을 수정합니다. 행이 없으면 새로 추가합니다.</p>
+      <button id="loanResetBtn" class="danger-outline-btn full" type="button">이 달 대출내역 초기화</button>
+      <p class="helper-text">원금·이자를 비우면 0원으로 저장됩니다. 잔액을 비우면 전월 잔액에서 원금을 뺀 값으로 자동 계산합니다.</p>
     </form>
   </dialog>
 
