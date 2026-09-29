@@ -1,7 +1,6 @@
-import { sheetsGet, sheetsUpdate } from './google.js';
+import { ensureAppTables } from './d1.js';
 import { normalizeMonthValue, is2026Month } from './year2026.js';
 
-const STORAGE_RANGE = 'SETTINGS!C4:D4';
 const STORAGE_KEY = 'APP_MONTH_META';
 
 export function parseClosed(value) {
@@ -9,16 +8,10 @@ export function parseClosed(value) {
   return ['Y','YES','TRUE','1','CLOSED','마감'].includes(v);
 }
 
-/**
- * Supports both the current JSON cell format:
- *   [["APP_MONTH_META", "{...json...}"]]
- * and the older row format:
- *   [["2026-01", "memo", "Y"], ...]
- */
+// Kept for backwards compatibility with older imports/builds.
 export function parseMonthMetaRows(rows = []) {
   const map = new Map();
   if (!Array.isArray(rows) || !rows.length) return map;
-
   const first = rows[0] || [];
   if (String(first?.[0] || '').trim() === STORAGE_KEY) {
     const raw = String(first?.[1] || '').trim();
@@ -29,54 +22,38 @@ export function parseMonthMetaRows(rows = []) {
         for (const [key, value] of Object.entries(parsed)) {
           const month = normalizeMonthValue(key);
           if (!is2026Month(month)) continue;
-          map.set(month, {
-            month,
-            memo: String(value?.memo ?? ''),
-            closed: Boolean(value?.closed),
-          });
+          map.set(month, { month, memo: String(value?.memo ?? ''), closed: Boolean(value?.closed) });
         }
       }
     } catch {}
     return map;
   }
-
   for (const row of rows) {
     const month = normalizeMonthValue(row?.[0]);
     if (!is2026Month(month)) continue;
-    map.set(month, {
-      month,
-      memo: String(row?.[1] ?? ''),
-      closed: parseClosed(row?.[2]),
-    });
+    map.set(month, { month, memo: String(row?.[1] ?? ''), closed: parseClosed(row?.[2]) });
   }
   return map;
 }
 
-async function readAll(env) {
-  const data = await sheetsGet(env, [STORAGE_RANGE]);
-  const rows = data.valueRanges?.[0]?.values || [];
-  const map = parseMonthMetaRows(rows);
-  const all = {};
-  for (const [month, meta] of map.entries()) {
-    all[month] = { memo: meta.memo, closed: meta.closed };
-  }
-  return all;
+export async function getMonthMeta(env, month) {
+  const ym = normalizeMonthValue(month);
+  if (!is2026Month(ym)) return { month: ym, memo: '', closed: false };
+  const db = await ensureAppTables(env);
+  const row = await db.prepare('SELECT month,memo,closed FROM month_meta WHERE month = ?').bind(ym).first();
+  return { month: ym, memo: String(row?.memo ?? ''), closed: Boolean(row?.closed) };
 }
 
 export async function writeMonthMeta(env, month, meta) {
   const ym = normalizeMonthValue(month);
   if (!is2026Month(ym)) throw new Error('2026년 월만 저장할 수 있습니다.');
-  const all = await readAll(env);
-  all[ym] = { memo: String(meta?.memo ?? ''), closed: Boolean(meta?.closed) };
-  await sheetsUpdate(env, STORAGE_RANGE, [[STORAGE_KEY, JSON.stringify(all)]], 'RAW');
-  return { month: ym, ...all[ym] };
-}
-
-export async function getMonthMeta(env, month) {
-  const ym = normalizeMonthValue(month);
-  const all = await readAll(env);
-  const meta = all[ym] || {};
-  return { month: ym, memo: String(meta.memo ?? ''), closed: Boolean(meta.closed) };
+  const db = await ensureAppTables(env);
+  const now = new Date().toISOString();
+  await db.prepare(`INSERT INTO month_meta (month,memo,closed,updated_at)
+    VALUES (?,?,?,?)
+    ON CONFLICT(month) DO UPDATE SET memo=excluded.memo, closed=excluded.closed, updated_at=excluded.updated_at`)
+    .bind(ym, String(meta?.memo ?? ''), meta?.closed ? 1 : 0, now).run();
+  return { month: ym, memo: String(meta?.memo ?? ''), closed: Boolean(meta?.closed) };
 }
 
 export async function assertMonthOpen(env, month) {

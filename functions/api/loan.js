@@ -1,7 +1,7 @@
 import { json, bad } from './_lib/http.js';
 import { sheetsGet, sheetsUpdate, sheetsAppend } from './_lib/google.js';
 import { syncMonthlySettlement } from './_lib/settlement.js';
-import { parseMonthMetaRows } from './_lib/monthmeta.js';
+import { assertMonthOpen } from './_lib/monthmeta.js';
 
 const n = (v) => {
   const x = Number(v);
@@ -34,10 +34,9 @@ export async function onRequestPut({ request, env }) {
     if (principal < 0 || interest < 0 || balance < 0 || rate < 0) return bad('invalid loan values');
 
     const total = principal + interest;
-    const data = await sheetsGet(env, ['대출내역!A3:I500','SETTINGS!C4:D4']);
+    await assertMonthOpen(env, month);
+    const data = await sheetsGet(env, ['대출내역!A3:I500']);
     const rows = data.valueRanges?.[0]?.values || [];
-    const metaMap = parseMonthMetaRows(data.valueRanges?.[1]?.values || []);
-    if (metaMap.get(month)?.closed) return bad(`${Number(month.slice(5))}월은 정산 마감된 달입니다. 마감 해제 후 수정해주세요.`, 409);
     const idx = rows.findIndex((row) => normalizeMonthValue(row?.[0]) === month);
     const normalizedRows = rows
       .map((row) => ({ month: normalizeMonthValue(row?.[0]), rate: n(row?.[3]), balance: n(row?.[4]) }))
@@ -73,10 +72,9 @@ export async function onRequestDelete({ request, env }) {
     const month = String(body.month || '').trim();
     if (!/^2026-(0[1-9]|1[0-2])$/.test(month)) return bad('대출내역은 2026년 1월~12월만 관리합니다.');
 
-    const data = await sheetsGet(env, ['대출내역!A3:I500','SETTINGS!C4:D4']);
+    await assertMonthOpen(env, month);
+    const data = await sheetsGet(env, ['대출내역!A3:I500']);
     const rows = data.valueRanges?.[0]?.values || [];
-    const metaMap = parseMonthMetaRows(data.valueRanges?.[1]?.values || []);
-    if (metaMap.get(month)?.closed) return bad(`${Number(month.slice(5))}월은 정산 마감된 달입니다. 마감 해제 후 수정해주세요.`, 409);
     const idx = rows.findIndex((row) => normalizeMonthValue(row?.[0]) === month);
     if (idx < 0) return bad('초기화할 대출내역이 없습니다.', 404);
 

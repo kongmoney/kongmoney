@@ -1,5 +1,6 @@
 import { json } from './_lib/http.js';
 import { getAccessToken, sheetsGet } from './_lib/google.js';
+import { ensureAppTables } from './_lib/d1.js';
 
 export async function onRequestGet({ env }) {
   const clientEmailConfigured = Boolean(env.GOOGLE_CLIENT_EMAIL || env.GOOGLE_SERVICE_ACCOUNT_EMAIL);
@@ -16,6 +17,7 @@ export async function onRequestGet({ env }) {
     },
     token: false,
     sheetRead: false,
+    d1: false,
   };
 
   if (!sheetIdConfigured || !clientEmailConfigured || !privateKeyConfigured) {
@@ -28,6 +30,8 @@ export async function onRequestGet({ env }) {
     result.token = true;
     await sheetsGet(env, ['월정산!A1:A3']);
     result.sheetRead = true;
+    await ensureAppTables(env);
+    result.d1 = true;
     result.ok = true;
     return json(result);
   } catch (err) {

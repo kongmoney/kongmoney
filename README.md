@@ -102,8 +102,27 @@ Cloudflare Pages + Google Sheets + GitHub 기반 공동 가계부입니다.
 
 - 2026-09-29 — v5.4.3 — 반복지출 저장을 SETTINGS 빈 셀에서 숨김 APP_DATA 시트로 이전, 레거시 데이터 자동 마이그레이션, 저장 후 재조회 검증 추가.
 
+
+## v5.5.0 - D1 앱 데이터 분리
+- 반복지출 저장소를 Google Sheet에서 Cloudflare D1로 이전
+- 월별 메모/월 마감 상태도 Cloudflare D1로 이전
+- 실제 지출/대출/월정산은 기존 Google Sheet 유지
+- D1 테이블은 첫 API 호출 시 자동 생성
+- Cloudflare Pages D1 binding 변수명은 반드시 `DB`
+- wrangler.toml은 포함하지 않음
+
+### 최초 1회 Cloudflare 설정
+1. Cloudflare에서 D1 database `kongmoney-db` 생성
+2. Workers & Pages > kongmoney > Settings > Bindings > Add > D1 database
+3. Variable name: `DB`
+4. Database: `kongmoney-db` 선택
+5. 저장 후 프로젝트 Redeploy
+
+이전 테스트용 반복지출/월메모 데이터는 새 D1로 자동 이전하지 않습니다. D1 연결 후 다시 등록해주세요.
+
 ## 배포/커밋 내역
 <!-- AUTO_DEPLOY_HISTORY -->
+- 2026-09-30 00:05 KST — chore: kongmoney ZIP deploy 09-29-22:42 — 27개 파일 업로드
 - 2026-09-29 23:50 KST — chore: kongmoney ZIP deploy 09-29-22:42 — 25개 파일 업로드
 - 2026-09-29 23:36 KST — chore: kongmoney ZIP deploy 09-29-22:42 — 25개 파일 업로드
 - 2026-09-29 23:29 KST — chore: kongmoney ZIP deploy 09-29-22:42 — 25개 파일 업로드

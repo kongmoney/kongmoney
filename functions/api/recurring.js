@@ -1,10 +1,6 @@
 import { json, bad } from './_lib/http.js';
-import { sheetsGet, sheetsUpdate, sheetsEnsureSheet } from './_lib/google.js';
+import { ensureAppTables } from './_lib/d1.js';
 
-const APP_SHEET = 'APP_DATA';
-const STORAGE_RANGE = `${APP_SHEET}!A1:B1`;
-const LEGACY_RANGE = 'SETTINGS!C3:D3';
-const STORAGE_KEY = 'APP_RECURRING';
 const SH_JH_ALIASES = new Set(['SH + JH','JH + SH']);
 const VALID_SPLITS = new Set(['3인 공동','JH + CE',...SH_JH_ALIASES]);
 
@@ -17,7 +13,7 @@ function normalizeTemplate(item, index = 0) {
     subcategory: String(item?.subcategory || ''),
     description: String(item?.description || ''),
     amount: Number.isFinite(amount) ? amount : 0,
-    splitType: String(item?.splitType || ''),
+    splitType: String(item?.splitType || item?.split_type || ''),
   };
 }
 
@@ -36,76 +32,39 @@ function validate(body) {
   return { name, category, subcategory, description, amount, splitType };
 }
 
-function parseStorageRow(row) {
-  if (String(row?.[0] || '').trim() !== STORAGE_KEY) return [];
-  const raw = String(row?.[1] || '').trim();
-  if (!raw) return [];
-  try {
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed)
-      ? parsed.map(normalizeTemplate).filter(t => t.name && t.category && t.subcategory && t.amount > 0)
-      : [];
-  } catch {
-    return [];
-  }
+async function listTemplates(db) {
+  const result = await db.prepare(`SELECT id,name,category,subcategory,description,amount,split_type
+    FROM recurring_expenses ORDER BY created_at ASC, id ASC`).all();
+  return (result.results || []).map(row => normalizeTemplate(row));
 }
 
-async function ensureStorage(env) {
-  await sheetsEnsureSheet(env, APP_SHEET, { hidden: true, rowCount: 20, columnCount: 4 });
-}
-
-async function readTemplates(env) {
-  await ensureStorage(env);
-  const data = await sheetsGet(env, [STORAGE_RANGE, LEGACY_RANGE]);
-  const appRow = data.valueRanges?.[0]?.values?.[0] || [];
-  const current = parseStorageRow(appRow);
-  if (current.length || String(appRow?.[0] || '').trim() === STORAGE_KEY) return current;
-
-  // One-time migration from v5.4.1/v5.4.2 storage if it exists.
-  const legacyRow = data.valueRanges?.[1]?.values?.[0] || [];
-  const legacy = parseStorageRow(legacyRow);
-  if (legacy.length) {
-    await writeTemplates(env, legacy);
-    return legacy;
-  }
-  return [];
-}
-
-async function writeTemplates(env, templates) {
-  await ensureStorage(env);
-  const clean = templates.map(normalizeTemplate).filter(t => t.name && t.category && t.subcategory && t.amount > 0);
-  await sheetsUpdate(env, STORAGE_RANGE, [[STORAGE_KEY, JSON.stringify(clean)]], 'RAW');
-
-  // Read-after-write verification: do not tell the UI that saving succeeded unless Google returns the data.
-  const verify = await sheetsGet(env, [STORAGE_RANGE]);
-  const stored = parseStorageRow(verify.valueRanges?.[0]?.values?.[0] || []);
-  if (stored.length !== clean.length) {
-    throw new Error('반복지출 저장 검증에 실패했습니다. Google Sheet 저장값을 확인해주세요.');
-  }
-  return stored;
-}
+async function getDb(env) { return ensureAppTables(env); }
 
 export async function onRequestGet({ env }) {
   try {
-    const templates = await readTemplates(env);
-    return json({ ok: true, templates, storage: APP_SHEET });
+    const db = await getDb(env);
+    return json({ ok: true, templates: await listTemplates(db), storage: 'cloudflare-d1' });
   } catch (err) {
-    return bad(err?.message || 'recurring expense read error', 500);
+    return bad(err?.message || 'recurring expense read error', err?.status || 500);
   }
 }
 
 export async function onRequestPost({ request, env }) {
   try {
     const item = validate(await request.json());
-    const templates = await readTemplates(env);
-    if (templates.length >= 30) return bad('반복지출은 최대 30개까지 저장할 수 있습니다.', 409);
-    const template = { ...item, id: `rec-${Date.now().toString(36)}-${Math.random().toString(36).slice(2,7)}` };
-    const stored = await writeTemplates(env, [...templates, template]);
-    const saved = stored.find(t => t.id === template.id);
-    if (!saved) throw new Error('반복지출을 저장했지만 다시 읽지 못했습니다.');
-    return json({ ok: true, template: saved, templates: stored }, 201);
+    const db = await getDb(env);
+    const count = await db.prepare('SELECT COUNT(*) AS c FROM recurring_expenses').first();
+    if (Number(count?.c || 0) >= 50) return bad('반복지출은 최대 50개까지 저장할 수 있습니다.', 409);
+    const id = `rec-${Date.now().toString(36)}-${crypto.randomUUID().slice(0,8)}`;
+    const now = new Date().toISOString();
+    await db.prepare(`INSERT INTO recurring_expenses
+      (id,name,category,subcategory,description,amount,split_type,created_at,updated_at)
+      VALUES (?,?,?,?,?,?,?,?,?)`)
+      .bind(id,item.name,item.category,item.subcategory,item.description,Math.round(item.amount),item.splitType,now,now).run();
+    const templates = await listTemplates(db);
+    return json({ ok: true, template: templates.find(t => t.id === id), templates }, 201);
   } catch (err) {
-    return bad(err?.message || 'recurring expense save error', 400);
+    return bad(err?.message || 'recurring expense save error', err?.status || 400);
   }
 }
 
@@ -115,13 +74,13 @@ export async function onRequestPut({ request, env }) {
     const id = String(body.id || '').trim();
     if (!id) return bad('반복지출 ID가 없습니다.');
     const item = validate(body);
-    const templates = await readTemplates(env);
-    const index = templates.findIndex(t => t.id === id);
-    if (index < 0) return bad('수정할 반복지출을 찾지 못했습니다.', 404);
-    const template = { ...item, id };
-    templates[index] = template;
-    const stored = await writeTemplates(env, templates);
-    return json({ ok: true, template: stored.find(t => t.id === id) || template, templates: stored });
+    const db = await getDb(env);
+    const existing = await db.prepare('SELECT id FROM recurring_expenses WHERE id=?').bind(id).first();
+    if (!existing) return bad('수정할 반복지출을 찾지 못했습니다.', 404);
+    await db.prepare(`UPDATE recurring_expenses SET name=?,category=?,subcategory=?,description=?,amount=?,split_type=?,updated_at=? WHERE id=?`)
+      .bind(item.name,item.category,item.subcategory,item.description,Math.round(item.amount),item.splitType,new Date().toISOString(),id).run();
+    const templates = await listTemplates(db);
+    return json({ ok: true, template: templates.find(t => t.id === id), templates });
   } catch (err) {
     return bad(err?.message || 'recurring expense update error', err?.status || 400);
   }
@@ -132,12 +91,12 @@ export async function onRequestDelete({ request, env }) {
     const body = await request.json().catch(() => ({}));
     const id = String(body.id || '').trim();
     if (!id) return bad('반복지출 ID가 없습니다.');
-    const templates = await readTemplates(env);
-    const next = templates.filter(t => t.id !== id);
-    if (next.length === templates.length) return bad('삭제할 반복지출을 찾지 못했습니다.', 404);
-    const stored = await writeTemplates(env, next);
-    return json({ ok: true, id, templates: stored });
+    const db = await getDb(env);
+    const existing = await db.prepare('SELECT id FROM recurring_expenses WHERE id=?').bind(id).first();
+    if (!existing) return bad('삭제할 반복지출을 찾지 못했습니다.', 404);
+    await db.prepare('DELETE FROM recurring_expenses WHERE id=?').bind(id).run();
+    return json({ ok: true, id, templates: await listTemplates(db) });
   } catch (err) {
-    return bad(err?.message || 'recurring expense delete error', 500);
+    return bad(err?.message || 'recurring expense delete error', err?.status || 500);
   }
 }

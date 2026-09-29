@@ -2,7 +2,7 @@ import { json, bad } from './_lib/http.js';
 import { sheetsGet, sheetsUpdate, sheetsClear } from './_lib/google.js';
 import { syncMonthlySettlement } from './_lib/settlement.js';
 import { normalizeMonthValue, is2026Month } from './_lib/year2026.js';
-import { parseMonthMetaRows } from './_lib/monthmeta.js';
+import { assertMonthOpen } from './_lib/monthmeta.js';
 
 const SH_JH_ALIASES = new Set([
   '총무+구성원 A','총무+구성원 A 부담','총무 + 구성원 A','2인 공동',
@@ -42,22 +42,14 @@ function parseExpense(body) {
   return { month, category, subcategory, description, amount, ...split };
 }
 
-function assertOpen(metaMap, month) {
-  if (metaMap.get(month)?.closed) {
-    const err = new Error(`${Number(month.slice(5))}월은 정산 마감된 달입니다. 마감 해제 후 수정해주세요.`);
-    err.status = 409;
-    throw err;
-  }
-}
 
 export async function onRequestPost(context) {
   const { request, env } = context;
   try {
     const item = parseExpense(await request.json());
-    const data = await sheetsGet(env, ['지출내역!A3:A5000','SETTINGS!C4:D4']);
+    await assertMonthOpen(env, item.month);
+    const data = await sheetsGet(env, ['지출내역!A3:A5000']);
     const rows = data.valueRanges?.[0]?.values || [];
-    const metaMap = parseMonthMetaRows(data.valueRanges?.[1]?.values || []);
-    assertOpen(metaMap, item.month);
 
     let lastUsedOffset = -1;
     for (let i = 0; i < rows.length; i += 1) if (String(rows[i]?.[0] ?? '').trim()) lastUsedOffset = i;
@@ -83,13 +75,12 @@ export async function onRequestPut(context) {
     const sheetRow = Number(body.sheetRow);
     if (!Number.isInteger(sheetRow) || sheetRow < 3 || sheetRow > 5000) return bad('수정할 지출 행 정보가 올바르지 않습니다.');
     const item = parseExpense(body);
-    const data = await sheetsGet(env, [`지출내역!A${sheetRow}:I${sheetRow}`,'SETTINGS!C4:D4']);
+    const data = await sheetsGet(env, [`지출내역!A${sheetRow}:I${sheetRow}`]);
     const current = data.valueRanges?.[0]?.values?.[0] || [];
     const originalMonth = normalizeMonthValue(current?.[0]);
     if (!is2026Month(originalMonth)) return bad('수정할 지출내역을 찾지 못했습니다.', 404);
-    const metaMap = parseMonthMetaRows(data.valueRanges?.[1]?.values || []);
-    assertOpen(metaMap, originalMonth);
-    if (item.month !== originalMonth) assertOpen(metaMap, item.month);
+    await assertMonthOpen(env, originalMonth);
+    if (item.month !== originalMonth) await assertMonthOpen(env, item.month);
 
     await sheetsUpdate(env, `지출내역!A${sheetRow}:I${sheetRow}`, [[
       item.month, item.category, item.subcategory, item.description, item.amount,
@@ -111,12 +102,11 @@ export async function onRequestDelete(context) {
     const body = await request.json().catch(() => ({}));
     const sheetRow = Number(body.sheetRow);
     if (!Number.isInteger(sheetRow) || sheetRow < 3 || sheetRow > 5000) return bad('삭제할 지출 행 정보가 올바르지 않습니다.');
-    const data = await sheetsGet(env, [`지출내역!A${sheetRow}:I${sheetRow}`,'SETTINGS!C4:D4']);
+    const data = await sheetsGet(env, [`지출내역!A${sheetRow}:I${sheetRow}`]);
     const current = data.valueRanges?.[0]?.values?.[0] || [];
     const month = normalizeMonthValue(current?.[0]);
     if (!is2026Month(month)) return bad('삭제할 지출내역을 찾지 못했습니다.', 404);
-    const metaMap = parseMonthMetaRows(data.valueRanges?.[1]?.values || []);
-    assertOpen(metaMap, month);
+    await assertMonthOpen(env, month);
     await sheetsClear(env, `지출내역!A${sheetRow}:I${sheetRow}`);
     context.waitUntil(syncMonthlySettlement(env).catch((err) => console.error('settlement background sync failed', err)));
     return json({ ok: true, mode: 'deleted', sheetRow, month });

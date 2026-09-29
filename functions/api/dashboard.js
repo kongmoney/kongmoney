@@ -1,6 +1,6 @@
 import { json, bad } from './_lib/http.js';
 import { sheetsGet } from './_lib/google.js';
-import { parseMonthMetaRows } from './_lib/monthmeta.js';
+import { getMonthMeta } from './_lib/monthmeta.js';
 
 const n = (v) => {
   const x = Number(v);
@@ -102,10 +102,9 @@ export async function onRequestGet({ request, env }) {
       '대출내역!A3:I500',
       '월정산!A3:P500',
       'SETTINGS!B9:B12',
-      'SETTINGS!C4:D4',
     ]);
 
-    const [expensesRange, loansRange, settlementsRange, settingsRange, metaRange] = data.valueRanges || [];
+    const [expensesRange, loansRange, settlementsRange, settingsRange] = data.valueRanges || [];
     const expenses = (expensesRange?.values || []).map((row, i) => normalizeExpense(row, i + 3)).filter((r) => /^2026-(0[1-9]|1[0-2])$/.test(r.month));
     const loans = (loansRange?.values || []).map(normalizeLoan).filter((r) => /^2026-(0[1-9]|1[0-2])$/.test(r.month));
 
@@ -118,7 +117,6 @@ export async function onRequestGet({ request, env }) {
     const settingsRows = settingsRange?.values || [];
     const defaultLaborFee = n(settingsRows?.[0]?.[0]) || 200000;
     const configuredAutoTransfer = n(settingsRows?.[3]?.[0]) || 400000;
-    const metaMap = parseMonthMetaRows(metaRange?.values || []);
 
     let carry = 0;
     const summaryByMonth = new Map();
@@ -157,7 +155,7 @@ export async function onRequestGet({ request, env }) {
     const previousSummary = /^2026-/.test(prevMonth) ? (summaryByMonth.get(prevMonth) || emptySummary(0)) : null;
     const monthExpenses = expenses.filter((r) => r.month === month).map(({ manager, memberA, memberB, ...rest }) => rest);
     const loan = loans.find((r) => r.month === month) || normalizeLoan([]);
-    const meta = metaMap.get(month) || { month, memo: '', closed: false };
+    const meta = await getMonthMeta(env, month);
 
     return json({
       ok: true,
