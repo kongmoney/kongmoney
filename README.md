@@ -87,8 +87,15 @@ Cloudflare Pages + Google Sheets + GitHub 기반 공동 가계부입니다.
 - 월 마감: SETTINGS N열에 상태 저장, 마감된 달의 지출 추가/수정/삭제 및 대출 수정 잠금
 - 기존 지출/대출/월정산/CE 자동이체/관리자 ZIP 배포 기능 유지
 
+### v5.4.1
+- 반복지출 저장 실패 수정: SETTINGS 우측 확장 열(D:J) 대신 C3:D3 단일 JSON 저장소 사용
+- 월별 메모/마감도 SETTINGS C4:D4 단일 JSON 저장소로 이동
+- 엑셀→Google Sheets 변환 시 열 개수가 적어도 동작하도록 기존 A:D 범위 안에서만 저장
+- 반복지출 식별자를 sheetRow 대신 고유 ID로 변경
+
 ## 배포/커밋 내역
 <!-- AUTO_DEPLOY_HISTORY -->
+- 2026-09-29 23:29 KST — chore: kongmoney ZIP deploy 09-29-22:42 — 25개 파일 업로드
 - 2026-09-29 23:18 KST — chore: kongmoney ZIP deploy 09-29-22:42 — 25개 파일 업로드
 - 2026-09-29 23:05 KST — chore: kongmoney ZIP deploy 09-29-22:42 — 22개 파일 업로드
 - 2026-09-29 22:56 KST — chore: kongmoney ZIP deploy 09-29-22:42 — 22개 파일 업로드

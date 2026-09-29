@@ -1,29 +1,42 @@
-import { sheetsGet } from './google.js';
+import { sheetsGet, sheetsUpdate } from './google.js';
 import { normalizeMonthValue, is2026Month } from './year2026.js';
+
+const STORAGE_RANGE = 'SETTINGS!C4:D4';
+const STORAGE_KEY = 'APP_MONTH_META';
 
 export function parseClosed(value) {
   const v = String(value ?? '').trim().toUpperCase();
   return ['Y','YES','TRUE','1','CLOSED','마감'].includes(v);
 }
 
-export function parseMonthMetaRows(rows = []) {
-  const map = new Map();
-  for (const row of rows) {
-    const month = normalizeMonthValue(row?.[0]);
-    if (!is2026Month(month)) continue;
-    map.set(month, {
-      month,
-      memo: String(row?.[1] ?? ''),
-      closed: parseClosed(row?.[2]),
-    });
+async function readAll(env) {
+  const data = await sheetsGet(env, [STORAGE_RANGE]);
+  const row = data.valueRanges?.[0]?.values?.[0] || [];
+  if (String(row?.[0] || '').trim() !== STORAGE_KEY) return {};
+  const raw = String(row?.[1] || '').trim();
+  if (!raw) return {};
+  try {
+    const parsed = JSON.parse(raw);
+    return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {};
+  } catch {
+    return {};
   }
-  return map;
+}
+
+export async function writeMonthMeta(env, month, meta) {
+  const ym = normalizeMonthValue(month);
+  if (!is2026Month(ym)) throw new Error('2026년 월만 저장할 수 있습니다.');
+  const all = await readAll(env);
+  all[ym] = { memo: String(meta?.memo ?? ''), closed: Boolean(meta?.closed) };
+  await sheetsUpdate(env, STORAGE_RANGE, [[STORAGE_KEY, JSON.stringify(all)]], 'RAW');
+  return { month: ym, ...all[ym] };
 }
 
 export async function getMonthMeta(env, month) {
-  const data = await sheetsGet(env, ['SETTINGS!L3:N14']);
-  const rows = data.valueRanges?.[0]?.values || [];
-  return parseMonthMetaRows(rows).get(month) || { month, memo: '', closed: false };
+  const ym = normalizeMonthValue(month);
+  const all = await readAll(env);
+  const meta = all[ym] || {};
+  return { month: ym, memo: String(meta.memo ?? ''), closed: Boolean(meta.closed) };
 }
 
 export async function assertMonthOpen(env, month) {

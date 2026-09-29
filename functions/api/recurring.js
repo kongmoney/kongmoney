@@ -1,20 +1,21 @@
 import { json, bad } from './_lib/http.js';
-import { sheetsGet, sheetsUpdate, sheetsClear } from './_lib/google.js';
+import { sheetsGet, sheetsUpdate } from './_lib/google.js';
 
+const STORAGE_RANGE = 'SETTINGS!C3:D3';
+const STORAGE_KEY = 'APP_RECURRING';
 const SH_JH_ALIASES = new Set(['SH + JH','JH + SH']);
 const VALID_SPLITS = new Set(['3인 공동','JH + CE',...SH_JH_ALIASES]);
 
-function normalizeTemplate(row, sheetRow) {
-  const amount = Number(row?.[5] || 0);
+function normalizeTemplate(item, index = 0) {
+  const amount = Number(item?.amount || 0);
   return {
-    sheetRow,
-    id: String(row?.[0] || `rec-${sheetRow}`),
-    name: String(row?.[1] || ''),
-    category: String(row?.[2] || ''),
-    subcategory: String(row?.[3] || ''),
-    description: String(row?.[4] || ''),
+    id: String(item?.id || `rec-${index + 1}`),
+    name: String(item?.name || ''),
+    category: String(item?.category || ''),
+    subcategory: String(item?.subcategory || ''),
+    description: String(item?.description || ''),
     amount: Number.isFinite(amount) ? amount : 0,
-    splitType: String(row?.[6] || ''),
+    splitType: String(item?.splitType || ''),
   };
 }
 
@@ -33,11 +34,27 @@ function validate(body) {
   return { name, category, subcategory, description, amount, splitType };
 }
 
+async function readTemplates(env) {
+  const data = await sheetsGet(env, [STORAGE_RANGE]);
+  const row = data.valueRanges?.[0]?.values?.[0] || [];
+  if (String(row?.[0] || '').trim() !== STORAGE_KEY) return [];
+  const raw = String(row?.[1] || '').trim();
+  if (!raw) return [];
+  try {
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed.map(normalizeTemplate).filter(t => t.name && t.category && t.amount > 0) : [];
+  } catch {
+    return [];
+  }
+}
+
+async function writeTemplates(env, templates) {
+  await sheetsUpdate(env, STORAGE_RANGE, [[STORAGE_KEY, JSON.stringify(templates)]], 'RAW');
+}
+
 export async function onRequestGet({ env }) {
   try {
-    const data = await sheetsGet(env, ['SETTINGS!D3:J52']);
-    const rows = data.valueRanges?.[0]?.values || [];
-    const templates = rows.map((row, i) => normalizeTemplate(row, i + 3)).filter(t => t.name && t.category && t.amount > 0);
+    const templates = await readTemplates(env);
     return json({ ok: true, templates });
   } catch (err) {
     return bad(err?.message || 'recurring expense read error', 500);
@@ -47,16 +64,12 @@ export async function onRequestGet({ env }) {
 export async function onRequestPost({ request, env }) {
   try {
     const item = validate(await request.json());
-    const data = await sheetsGet(env, ['SETTINGS!D3:D52']);
-    const rows = data.valueRanges?.[0]?.values || [];
-    let targetRow = 3;
-    for (let i = 0; i < 50; i += 1) {
-      if (!String(rows[i]?.[0] || '').trim()) { targetRow = i + 3; break; }
-      if (i === 49) return bad('반복지출 저장 공간이 가득 찼습니다.', 409);
-    }
-    const id = `rec-${Date.now().toString(36)}`;
-    await sheetsUpdate(env, `SETTINGS!D${targetRow}:J${targetRow}`, [[id, item.name, item.category, item.subcategory, item.description, item.amount, item.splitType]], 'RAW');
-    return json({ ok: true, template: { ...item, id, sheetRow: targetRow } }, 201);
+    const templates = await readTemplates(env);
+    if (templates.length >= 30) return bad('반복지출은 최대 30개까지 저장할 수 있습니다.', 409);
+    const template = { ...item, id: `rec-${Date.now().toString(36)}` };
+    templates.push(template);
+    await writeTemplates(env, templates);
+    return json({ ok: true, template }, 201);
   } catch (err) {
     return bad(err?.message || 'recurring expense save error', 400);
   }
@@ -65,24 +78,31 @@ export async function onRequestPost({ request, env }) {
 export async function onRequestPut({ request, env }) {
   try {
     const body = await request.json();
-    const sheetRow = Number(body.sheetRow);
-    if (!Number.isInteger(sheetRow) || sheetRow < 3 || sheetRow > 52) return bad('반복지출 행 정보가 올바르지 않습니다.');
+    const id = String(body.id || '').trim();
+    if (!id) return bad('반복지출 ID가 없습니다.');
     const item = validate(body);
-    const id = String(body.id || `rec-${sheetRow}`);
-    await sheetsUpdate(env, `SETTINGS!D${sheetRow}:J${sheetRow}`, [[id, item.name, item.category, item.subcategory, item.description, item.amount, item.splitType]], 'RAW');
-    return json({ ok: true, template: { ...item, id, sheetRow } });
+    const templates = await readTemplates(env);
+    const index = templates.findIndex(t => t.id === id);
+    if (index < 0) return bad('수정할 반복지출을 찾지 못했습니다.', 404);
+    const template = { ...item, id };
+    templates[index] = template;
+    await writeTemplates(env, templates);
+    return json({ ok: true, template });
   } catch (err) {
-    return bad(err?.message || 'recurring expense update error', 400);
+    return bad(err?.message || 'recurring expense update error', err?.status || 400);
   }
 }
 
 export async function onRequestDelete({ request, env }) {
   try {
     const body = await request.json().catch(() => ({}));
-    const sheetRow = Number(body.sheetRow);
-    if (!Number.isInteger(sheetRow) || sheetRow < 3 || sheetRow > 52) return bad('반복지출 행 정보가 올바르지 않습니다.');
-    await sheetsClear(env, `SETTINGS!D${sheetRow}:J${sheetRow}`);
-    return json({ ok: true, sheetRow });
+    const id = String(body.id || '').trim();
+    if (!id) return bad('반복지출 ID가 없습니다.');
+    const templates = await readTemplates(env);
+    const next = templates.filter(t => t.id !== id);
+    if (next.length === templates.length) return bad('삭제할 반복지출을 찾지 못했습니다.', 404);
+    await writeTemplates(env, next);
+    return json({ ok: true, id });
   } catch (err) {
     return bad(err?.message || 'recurring expense delete error', 500);
   }
