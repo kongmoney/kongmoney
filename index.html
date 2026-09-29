@@ -3,21 +3,61 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <meta name="theme-color" content="#173f35" />
+  <meta name="theme-color" content="#f7efe7" />
   <title>KongMoney · 콩머니</title>
   <link rel="stylesheet" href="/assets/css/app.css" />
 </head>
 <body>
-  <div class="app-shell">
-    <header class="topbar">
-      <div>
-        <p class="eyebrow">KONGMONEY</p>
+  <div class="page-wrap">
+    <header class="hero card note-card">
+      <div class="hero-copy">
+        <p class="hero-kicker">우리의 생활비를 귀엽고 간단하게 정리해요</p>
         <h1>콩머니</h1>
+        <p class="hero-title-sub">공동생활비 · 대출 · 자동이체를<br />한눈에 정리하는 우리집 가계부 노트</p>
+        <div class="hero-pills">
+          <span class="pill mint">공동 가계부</span>
+          <span class="pill pink">자동 정산</span>
+          <span class="pill yellow">B 자동이체 이월</span>
+        </div>
       </div>
-      <div class="top-actions"><span id="connectionStatus" class="connection-status">연결 확인 중…</span><button id="refreshBtn" class="icon-btn" type="button" aria-label="새로고침">↻</button></div>
+      <div class="hero-visual" aria-hidden="true">
+        <div class="mascot mascot-mint">
+          <div class="ears"></div>
+          <div class="face">₩</div>
+        </div>
+        <div class="mascot mascot-pink">
+          <div class="ears"></div>
+          <div class="face">✓</div>
+        </div>
+        <div class="sticker sticker-one">콩콩 정리중!</div>
+        <div class="sticker sticker-two">매달 착착</div>
+      </div>
+      <div class="hero-side card-soft">
+        <div class="hero-side-item">
+          <span class="icon-circle mint">✓</span>
+          <div>
+            <strong>생각보다 간단해요</strong>
+            <p>지출을 적으면 분담금과 정산액이 자동으로 계산돼요.</p>
+          </div>
+        </div>
+        <div class="hero-side-item">
+          <span class="icon-circle pink">✎</span>
+          <div>
+            <strong>공동생활비를 정리해요</strong>
+            <p>생활비, 기타비용, 대출까지 한 곳에서 관리해요.</p>
+          </div>
+        </div>
+        <div class="hero-side-item">
+          <span class="icon-circle yellow">↺</span>
+          <div>
+            <strong>B 자동이체도 반영돼요</strong>
+            <p>40만원 자동이체와 남은 차액을 다음 달까지 이어서 봐요.</p>
+          </div>
+        </div>
+      </div>
     </header>
 
-    <main>
+    <div class="utility-row">
       <section class="month-bar card">
         <button id="prevMonth" class="month-arrow" type="button" aria-label="이전 달">‹</button>
         <div class="month-center">
@@ -26,93 +66,165 @@
         </div>
         <button id="nextMonth" class="month-arrow" type="button" aria-label="다음 달">›</button>
       </section>
+      <div class="top-actions">
+        <span id="connectionStatus" class="connection-status">연결 확인 중…</span>
+        <button id="refreshBtn" class="refresh-btn" type="button" aria-label="새로고침">↻ 새로고침</button>
+      </div>
+    </div>
 
-      <section class="summary-grid" aria-label="월 요약">
-        <article class="summary-card primary">
-          <span>이번 달 전체 지출</span>
-          <strong id="totalExpense">-</strong>
-          <small id="expenseBreakdown">생활비 - · 대출 -</small>
-        </article>
-        <article class="summary-card">
-          <span>총무 최종 부담</span>
-          <strong id="managerFinal">-</strong>
-        </article>
-        <article class="summary-card">
-          <span>구성원 A 최종 입금</span>
-          <strong id="memberAFinal">-</strong>
-        </article>
-        <article class="summary-card">
-          <span>구성원 B 정산액</span>
-          <strong id="memberBFinal">-</strong>
-        </article>
-      </section>
+    <main class="content-grid">
+      <section class="content-main">
+        <section class="summary-grid" aria-label="월 요약">
+          <article class="summary-card mint">
+            <span class="summary-label">이번 달 전체 지출</span>
+            <strong id="totalExpense">-</strong>
+            <small id="expenseBreakdown">생활비 - · 대출 -</small>
+          </article>
+          <article class="summary-card pink">
+            <span class="summary-label">총무 최종 부담</span>
+            <strong id="managerFinal">-</strong>
+            <small>이번 달 기준 실 부담액</small>
+          </article>
+          <article class="summary-card sky">
+            <span class="summary-label">구성원 A 최종 입금</span>
+            <strong id="memberAFinal">-</strong>
+            <small>총무에게 입금할 금액</small>
+          </article>
+          <article class="summary-card yellow">
+            <span class="summary-label">구성원 B 정산액</span>
+            <strong id="memberBFinal">-</strong>
+            <small>자동이체 기준 정산액</small>
+          </article>
+        </section>
 
-      <section class="card transfer-card">
-        <div class="section-heading">
-          <div>
-            <span class="section-kicker">구성원 B</span>
-            <h2>40만원 자동이체 · 이월</h2>
+        <section class="card note-card section-card">
+          <div class="section-heading">
+            <div>
+              <span class="section-kicker">EXPENSES</span>
+              <h2>지출 내역</h2>
+            </div>
+            <button id="addExpenseBtn" class="primary-btn" type="button">+ 지출 추가</button>
           </div>
-          <span class="badge">매월 자동</span>
-        </div>
-        <div class="transfer-flow">
-          <div><span>전월 이월</span><strong id="carryIn">-</strong></div>
-          <div class="operator">+</div>
-          <div><span>자동이체</span><strong id="autoTransfer">-</strong></div>
-          <div class="operator">−</div>
-          <div><span>당월 정산</span><strong id="bSettlement">-</strong></div>
-          <div class="operator">=</div>
-          <div class="result"><span>다음달 이월</span><strong id="carryOut">-</strong></div>
-        </div>
-        <p id="carryNote" class="helper-text"></p>
+          <div class="filter-row" id="categoryFilters">
+            <button class="chip active" data-filter="전체">전체</button>
+            <button class="chip" data-filter="생활비">생활비</button>
+            <button class="chip" data-filter="기타/부속">기타/부속</button>
+          </div>
+          <div id="expenseList" class="expense-list"></div>
+          <p id="emptyExpenses" class="empty-state" hidden>등록된 지출이 없습니다.</p>
+        </section>
+
+        <section class="double-grid">
+          <section class="card note-card section-card loan-card">
+            <div class="section-heading">
+              <div>
+                <span class="section-kicker">LOAN</span>
+                <h2>대출 현황</h2>
+              </div>
+            </div>
+            <div class="loan-grid">
+              <div><span>상환 원금</span><strong id="loanPrincipal">-</strong></div>
+              <div><span>납부 이자</span><strong id="loanInterest">-</strong></div>
+              <div><span>월 상환액</span><strong id="loanTotal">-</strong></div>
+              <div><span>상환 후 잔액</span><strong id="loanBalance">-</strong></div>
+            </div>
+          </section>
+
+          <section class="card note-card section-card palette-card">
+            <div class="section-heading compact-heading">
+              <div>
+                <span class="section-kicker">KONGMONEY</span>
+                <h2>콩머니 포인트</h2>
+              </div>
+            </div>
+            <div class="feature-list simple-list">
+              <div><span class="dot mint"></span><p>Google Sheet와 연동되어 실시간으로 정산돼요.</p></div>
+              <div><span class="dot pink"></span><p>생활비와 기타비용을 분담방식에 따라 자동 계산해요.</p></div>
+              <div><span class="dot yellow"></span><p>B 자동이체 차액을 다음 달로 그대로 이어서 보여줘요.</p></div>
+            </div>
+            <div class="palette-row">
+              <span class="color-chip mint"></span>
+              <span class="color-chip pink"></span>
+              <span class="color-chip sky"></span>
+              <span class="color-chip yellow"></span>
+              <span class="color-chip ink"></span>
+            </div>
+          </section>
+        </section>
       </section>
 
-      <section class="card">
-        <div class="section-heading">
-          <div>
-            <span class="section-kicker">EXPENSES</span>
-            <h2>지출 내역</h2>
+      <aside class="content-side">
+        <section class="card note-card section-card transfer-card">
+          <div class="section-heading compact-heading">
+            <div>
+              <span class="section-kicker">구성원 B</span>
+              <h2>40만원 자동이체 · 이월</h2>
+            </div>
+            <span class="badge">매월 자동</span>
           </div>
-          <button id="addExpenseBtn" class="primary-btn" type="button">+ 지출 추가</button>
-        </div>
-        <div class="filter-row" id="categoryFilters">
-          <button class="chip active" data-filter="전체">전체</button>
-          <button class="chip" data-filter="생활비">생활비</button>
-          <button class="chip" data-filter="기타/부속">기타/부속</button>
-        </div>
-        <div id="expenseList" class="expense-list"></div>
-        <p id="emptyExpenses" class="empty-state" hidden>등록된 지출이 없습니다.</p>
-      </section>
+          <div class="transfer-stack">
+            <div class="transfer-item">
+              <span>전월 이월</span>
+              <strong id="carryIn">-</strong>
+            </div>
+            <div class="transfer-sign">+</div>
+            <div class="transfer-item">
+              <span>자동이체</span>
+              <strong id="autoTransfer">-</strong>
+            </div>
+            <div class="transfer-sign">−</div>
+            <div class="transfer-item">
+              <span>당월 정산</span>
+              <strong id="bSettlement">-</strong>
+            </div>
+            <div class="transfer-sign">=</div>
+            <div class="transfer-item result">
+              <span>다음 달 이월</span>
+              <strong id="carryOut">-</strong>
+            </div>
+          </div>
+          <p id="carryNote" class="helper-text"></p>
+        </section>
 
-      <section class="card loan-card">
-        <div class="section-heading">
-          <div>
-            <span class="section-kicker">LOAN</span>
-            <h2>대출 현황</h2>
+        <section class="card note-card section-card info-card">
+          <div class="section-heading compact-heading">
+            <div>
+              <span class="section-kicker">사용 방법</span>
+              <h2>콩머니 사용 흐름</h2>
+            </div>
           </div>
-        </div>
-        <div class="loan-grid">
-          <div><span>상환 원금</span><strong id="loanPrincipal">-</strong></div>
-          <div><span>납부 이자</span><strong id="loanInterest">-</strong></div>
-          <div><span>월 상환액</span><strong id="loanTotal">-</strong></div>
-          <div><span>상환 후 잔액</span><strong id="loanBalance">-</strong></div>
-        </div>
-      </section>
+          <div class="guide-steps">
+            <div class="guide-step"><span class="step-badge mint">1</span><p>지출 내역에 생활비나 기타 비용을 추가해요.</p></div>
+            <div class="guide-step"><span class="step-badge pink">2</span><p>분담방식에 따라 각자 금액이 자동으로 계산돼요.</p></div>
+            <div class="guide-step"><span class="step-badge yellow">3</span><p>B의 40만원 자동이체와 남은 차액은 다음 달에 반영돼요.</p></div>
+          </div>
+        </section>
+
+        <section class="card note-card section-card spec-card">
+          <div class="section-heading compact-heading">
+            <div>
+              <span class="section-kicker">가계부 정보</span>
+              <h2>관리 기준</h2>
+            </div>
+          </div>
+          <ul class="spec-list">
+            <li><span>구성원 수</span><strong>총무 · A · B</strong></li>
+            <li><span>B 자동이체</span><strong>매월 400,000원</strong></li>
+            <li><span>데이터 원본</span><strong>Google Sheet</strong></li>
+            <li><span>배포 환경</span><strong>Cloudflare Pages</strong></li>
+          </ul>
+        </section>
+      </aside>
     </main>
-
-    <nav class="bottom-nav" aria-label="주 메뉴">
-      <button class="nav-item active" type="button"><span>⌂</span><small>홈</small></button>
-      <button class="nav-item" type="button"><span>₩</span><small>가계부</small></button>
-      <button class="nav-item" type="button"><span>✓</span><small>정산</small></button>
-      <button class="nav-item" type="button"><span>⌁</span><small>대출</small></button>
-      <button class="nav-item" type="button"><span>⚙</span><small>설정</small></button>
-    </nav>
   </div>
 
   <dialog id="expenseDialog" class="dialog">
     <form id="expenseForm" method="dialog" class="dialog-card">
       <div class="dialog-header">
-        <h2>지출 추가</h2>
+        <div>
+          <span class="section-kicker">NEW EXPENSE</span>
+          <h2>지출 추가</h2>
+        </div>
         <button class="close-btn" value="cancel" type="submit" aria-label="닫기">×</button>
       </div>
       <label>월<input id="expenseMonth" name="month" type="month" required /></label>
