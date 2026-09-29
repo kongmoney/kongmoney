@@ -1,0 +1,21 @@
+{
+  "2026-09": {
+    "summary": {
+      "living": 43770,
+      "loan": 1112875,
+      "total": 1156645,
+      "managerFinal": 172342.5,
+      "memberAFinal": 772342.5,
+      "memberBFinal": 211960,
+      "carryIn": 301143.3333333334,
+      "autoTransfer": 400000,
+      "carryOut": 489183.3333333334
+    },
+    "expenses": [
+      {"category":"생활비","subcategory":"인터넷비","description":"통합 인터넷/TV","amount":21000,"splitType":"3인 공동"},
+      {"category":"생활비","subcategory":"정기구독료","description":"넷플릭스","amount":13500,"splitType":"3인 공동"},
+      {"category":"기타/부속","subcategory":"쿠팡 월구독료","description":"쿠팡","amount":9270,"splitType":"총무+구성원 A 부담"}
+    ],
+    "loan": {"principal":16484,"interest":1096391,"total":1112875,"balance":339697449,"rate":0.038}
+  }
+}
