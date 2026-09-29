@@ -14,7 +14,7 @@
         <p class="eyebrow">KONGMONEY</p>
         <h1>콩머니</h1>
       </div>
-      <button id="refreshBtn" class="icon-btn" type="button" aria-label="새로고침">↻</button>
+      <div class="top-actions"><span id="connectionStatus" class="connection-status">연결 확인 중…</span><button id="refreshBtn" class="icon-btn" type="button" aria-label="새로고침">↻</button></div>
     </header>
 
     <main>
@@ -128,14 +128,15 @@
       <label>분담방식
         <select name="splitType" required>
           <option value="3인 공동">3인 공동</option>
-          <option value="총무+구성원 A 부담">총무 + 구성원 A</option>
+          <option value="총무+구성원 A">총무 + 구성원 A</option>
         </select>
       </label>
       <button class="primary-btn full" type="submit" value="default">저장</button>
-      <p class="helper-text">Google Sheet 연결 전에는 화면에서만 임시 반영됩니다.</p>
+      <p class="helper-text">저장하면 Google Sheet의 지출내역 탭에 바로 반영됩니다.</p>
     </form>
   </dialog>
 
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
   <script src="/assets/js/app.js" type="module"></script>
 </body>
 </html>

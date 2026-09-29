@@ -1,3 +1,6 @@
-kongmoney-google-v2
-2026-09-29
-Full upload baseline with Google Sheets connector.
+kongmoney-live-sheet-v3
+- Dashboard reads real Google Sheet values.
+- Monthly settlement is recalculated live from expenses + loan.
+- Member B 400,000 KRW transfer/carry is recalculated sequentially.
+- New expenses are appended directly to Google Sheet.
+- No secrets/configuration files are included.
