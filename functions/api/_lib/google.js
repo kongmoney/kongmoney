@@ -136,3 +136,20 @@ export async function sheetsUpdate(env, range, values, valueInputOption = 'USER_
   if (!res.ok) throw new Error(`Sheets update error ${res.status}${await readError(res)}`);
   return res.json();
 }
+
+
+export async function sheetsClear(env, range) {
+  if (!env.GOOGLE_SHEET_ID) throw new Error('GOOGLE_SHEET_ID is not configured.');
+  const token = await getAccessToken(env);
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${env.GOOGLE_SHEET_ID}/values/${encodeURIComponent(range)}:clear`;
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: {
+      authorization: `Bearer ${token}`,
+      'content-type': 'application/json',
+    },
+    body: '{}',
+  });
+  if (!res.ok) throw new Error(`Sheets clear error ${res.status}${await readError(res)}`);
+  return res.json();
+}

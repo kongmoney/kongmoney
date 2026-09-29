@@ -318,3 +318,15 @@ button{appearance:none}
 @media(max-width:390px){
   .mascot .face::before{font-size:30px!important}
 }
+
+
+/* v5.2.6 - expense delete */
+.expense-side{display:flex;align-items:center;gap:12px;justify-content:flex-end}
+.expense-delete-btn{border:1px solid #efd4d8;background:#fff7f8;color:#b45565;border-radius:999px;padding:8px 11px;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap}
+.expense-delete-btn:hover{background:#ffedf0}
+.expense-delete-btn:disabled{opacity:.5;cursor:wait}
+@media(max-width:620px){
+  .expense-row{grid-template-columns:minmax(0,1fr) auto}
+  .expense-side{flex-direction:column;align-items:flex-end;gap:7px}
+  .expense-delete-btn{padding:6px 9px}
+}

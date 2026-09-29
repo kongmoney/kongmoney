@@ -1,5 +1,5 @@
 import { json, bad } from './_lib/http.js';
-import { sheetsGet, sheetsUpdate } from './_lib/google.js';
+import { sheetsGet, sheetsUpdate, sheetsClear } from './_lib/google.js';
 
 const SH_JH_ALIASES = new Set([
   '총무+구성원 A','총무+구성원 A 부담','총무 + 구성원 A','2인 공동',
@@ -89,5 +89,22 @@ export async function onRequestPost({ request, env }) {
     }, 201);
   } catch (err) {
     return bad(err?.message || 'expense save error', 500);
+  }
+}
+
+
+export async function onRequestDelete({ request, env }) {
+  try {
+    const body = await request.json().catch(() => ({}));
+    const sheetRow = Number(body.sheetRow);
+    if (!Number.isInteger(sheetRow) || sheetRow < 3 || sheetRow > 5000) {
+      return bad('삭제할 지출 행 정보가 올바르지 않습니다.');
+    }
+
+    // 지출 데이터 열(A:I)만 비워 시트의 다른 서식/구조는 유지한다.
+    await sheetsClear(env, `지출내역!A${sheetRow}:I${sheetRow}`);
+    return json({ ok: true, mode: 'deleted', sheetRow });
+  } catch (err) {
+    return bad(err?.message || 'expense delete error', 500);
   }
 }

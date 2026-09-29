@@ -22,7 +22,7 @@ function normalizeMonthValue(value) {
   return text;
 }
 
-function normalizeExpense(row) {
+function normalizeExpense(row, sheetRow = null) {
   const amount = n(row[4]);
   const splitType = String(row[5] || '');
   let manager = n(row[6]);
@@ -43,6 +43,7 @@ function normalizeExpense(row) {
   }
 
   return {
+    sheetRow,
     month: normalizeMonthValue(row[0]),
     category: String(row[1] || ''),
     subcategory: String(row[2] || ''),
@@ -98,7 +99,7 @@ export async function onRequestGet({ request, env }) {
     ]);
 
     const [expensesRange, loansRange, settlementsRange, settingsRange] = data.valueRanges || [];
-    const expenses = (expensesRange?.values || []).map(normalizeExpense).filter((r) => isMonth(r.month));
+    const expenses = (expensesRange?.values || []).map((row, i) => normalizeExpense(row, i + 3)).filter((r) => isMonth(r.month));
     const loans = (loansRange?.values || []).map(normalizeLoan).filter((r) => isMonth(r.month));
 
     const laborFeeByMonth = new Map();

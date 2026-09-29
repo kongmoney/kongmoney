@@ -1,1 +1,1 @@
-kongmoney-v5.2.5-month-data-fix-cat
+kongmoney-v5.2.6-expense-delete
