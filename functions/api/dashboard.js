@@ -77,7 +77,7 @@ export async function onRequestGet({ request, env }) {
     if (!isMonth(month)) return bad('month must be YYYY-MM');
 
     const data = await sheetsGet(env, [
-      '지출내역!A3:I2000',
+      '지출내역!A3:I5000',
       '대출내역!A3:I500',
       '월정산!A3:H200',
       'SETTINGS!B9:B12',

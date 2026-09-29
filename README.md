@@ -49,8 +49,14 @@ Cloudflare Pages + Google Sheets + GitHub 기반 공동 가계부입니다.
 
 > 토큰이나 비밀키는 GitHub 소스에 넣지 않고 Cloudflare Variables and Secrets에서만 관리합니다.
 
+## v5.2.2 - 지출 조회 범위 수정
+- 신규 지출 저장 후 시트에는 반영되지만 화면 목록에 보이지 않는 문제 수정
+- `지출내역` 조회 범위를 A3:I2000 → A3:I5000으로 확장
+- 저장 시 빈 행 탐색 범위와 조회 범위를 동일하게 맞춤
+
 ## 배포/커밋 내역
 <!-- AUTO_DEPLOY_HISTORY -->
+- 2026-09-29 21:17 KST — chore: kongmoney ZIP deploy 09-29-21:07 — 18개 파일 업로드
 - 2026-09-29 21:13 KST — chore: kongmoney ZIP deploy 09-29-21:07 — 18개 파일 업로드
 - 2026-09-29 21:07 KST — chore: kongmoney ZIP deploy 09-29-21:07 — 18개 파일 업로드
 - 2026-09-29 — GitHub REST API User-Agent 403 수정, GitHub owner 기본값 kongmoney로 정정

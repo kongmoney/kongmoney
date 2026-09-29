@@ -1,1 +1,1 @@
-kongmoney-v5.2.1-expense-save-fix
+kongmoney-v5.2.2-expense-read-fix
