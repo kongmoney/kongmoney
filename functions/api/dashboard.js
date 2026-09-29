@@ -8,6 +8,20 @@ const n = (v) => {
 
 const isMonth = (v) => /^\d{4}-\d{2}$/.test(v || '');
 
+function normalizeMonthValue(value) {
+  if (value === null || value === undefined || value === '') return '';
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    // Google Sheets date serial: day 0 = 1899-12-30.
+    const ms = Date.UTC(1899, 11, 30) + Math.round(value) * 86400000;
+    const d = new Date(ms);
+    if (!Number.isNaN(d.getTime())) return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}`;
+  }
+  const text = String(value).trim();
+  const direct = text.match(/^(\d{4})[-/.년 ]+(\d{1,2})(?:[-/.월 ]+\d{1,2})?/);
+  if (direct) return `${direct[1]}-${String(Number(direct[2])).padStart(2, '0')}`;
+  return text;
+}
+
 function normalizeExpense(row) {
   const amount = n(row[4]);
   const splitType = String(row[5] || '');
@@ -29,7 +43,7 @@ function normalizeExpense(row) {
   }
 
   return {
-    month: String(row[0] || ''),
+    month: normalizeMonthValue(row[0]),
     category: String(row[1] || ''),
     subcategory: String(row[2] || ''),
     description: String(row[3] || ''),
@@ -43,7 +57,7 @@ function normalizeExpense(row) {
 
 function normalizeLoan(row) {
   return {
-    month: String(row[0] || ''),
+    month: normalizeMonthValue(row[0]),
     principal: n(row[1]),
     interest: n(row[2]),
     rate: n(row[3]),
@@ -89,7 +103,8 @@ export async function onRequestGet({ request, env }) {
 
     const laborFeeByMonth = new Map();
     for (const row of settlementsRange?.values || []) {
-      if (isMonth(row[0])) laborFeeByMonth.set(String(row[0]), n(row[7]));
+      const ym = normalizeMonthValue(row[0]);
+      if (isMonth(ym)) laborFeeByMonth.set(ym, n(row[7]));
     }
 
     const settingsRows = settingsRange?.values || [];

@@ -1,1 +1,1 @@
-kongmoney-v5.2.4-expense-persist-cat-face
+kongmoney-v5.2.5-month-data-fix-cat

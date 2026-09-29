@@ -76,7 +76,7 @@ export async function onRequestPost({ request, env }) {
       split.manager,
       split.memberA,
       split.memberB,
-    ]]);
+    ]], 'RAW');
 
     return json({
       ok: true,

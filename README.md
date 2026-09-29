@@ -63,8 +63,11 @@ Cloudflare Pages + Google Sheets + GitHub 기반 공동 가계부입니다.
 
 - 2026-09-29 21:xx KST — v5.2.4 — 월 선택 유지(localStorage), 저장 직후/새로고침 후 지출목록 유지 보강, 메인 마스코트 고양이 얼굴로 수정
 
+- 2026-09-29 21:xx KST — v5.2.5 — 신규 지출/대출 월값 RAW 저장, 기존 날짜형 월값 복원 조회, 10월 데이터/대출 0원 문제 수정, 고양이 마스코트 재디자인
+
 ## 배포/커밋 내역
 <!-- AUTO_DEPLOY_HISTORY -->
+- 2026-09-29 21:31 KST — chore: kongmoney ZIP deploy 09-29-21:07 — 18개 파일 업로드
 - 2026-09-29 21:26 KST — chore: kongmoney ZIP deploy 09-29-21:07 — 18개 파일 업로드
 - 2026-09-29 21:22 KST — chore: kongmoney ZIP deploy 09-29-21:07 — 18개 파일 업로드
 - 2026-09-29 21:17 KST — chore: kongmoney ZIP deploy 09-29-21:07 — 18개 파일 업로드

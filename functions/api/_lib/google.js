@@ -104,10 +104,10 @@ export async function sheetsGet(env, ranges) {
   return res.json();
 }
 
-export async function sheetsAppend(env, range, values) {
+export async function sheetsAppend(env, range, values, valueInputOption = 'USER_ENTERED') {
   if (!env.GOOGLE_SHEET_ID) throw new Error('GOOGLE_SHEET_ID is not configured.');
   const token = await getAccessToken(env);
-  const url = `https://sheets.googleapis.com/v4/spreadsheets/${env.GOOGLE_SHEET_ID}/values/${encodeURIComponent(range)}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`;
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${env.GOOGLE_SHEET_ID}/values/${encodeURIComponent(range)}:append?valueInputOption=${encodeURIComponent(valueInputOption)}&insertDataOption=INSERT_ROWS`;
   const res = await fetch(url, {
     method: 'POST',
     headers: {
@@ -121,10 +121,10 @@ export async function sheetsAppend(env, range, values) {
 }
 
 
-export async function sheetsUpdate(env, range, values) {
+export async function sheetsUpdate(env, range, values, valueInputOption = 'USER_ENTERED') {
   if (!env.GOOGLE_SHEET_ID) throw new Error('GOOGLE_SHEET_ID is not configured.');
   const token = await getAccessToken(env);
-  const url = `https://sheets.googleapis.com/v4/spreadsheets/${env.GOOGLE_SHEET_ID}/values/${encodeURIComponent(range)}?valueInputOption=USER_ENTERED`;
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${env.GOOGLE_SHEET_ID}/values/${encodeURIComponent(range)}?valueInputOption=${encodeURIComponent(valueInputOption)}`;
   const res = await fetch(url, {
     method: 'PUT',
     headers: {
