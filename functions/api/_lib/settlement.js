@@ -1,4 +1,6 @@
 import { sheetsGet, sheetsUpdate, sheetsClear } from './google.js';
+import { listExpenses } from './expense-store.js';
+import { listLoans } from './loan-store.js';
 import { normalizeMonthValue, is2026Month, months2026 } from './year2026.js';
 
 const n = (v) => {
@@ -11,37 +13,18 @@ function autoTransferForMonth(ym) {
   return 400000;
 }
 
-function normalizeExpense(row) {
-  const amount = n(row[4]);
-  const splitType = String(row[5] || '');
-  let manager = n(row[6]);
-  let memberA = n(row[7]);
-  let memberB = n(row[8]);
-  if (!manager && !memberA && !memberB && amount) {
-    if (splitType === '3인 공동') manager = memberA = memberB = amount / 3;
-    else if (['JH + CE','JH+CE'].includes(splitType)) memberA = memberB = amount / 2;
-    else manager = memberA = amount / 2;
-  }
-  return { month: normalizeMonthValue(row[0]), amount, manager, memberA, memberB };
-}
 
-function normalizeLoan(row) {
-  return {
-    month: normalizeMonthValue(row[0]),
-    total: n(row[5]) || n(row[1]) + n(row[2]),
-  };
-}
 
 export async function syncMonthlySettlement(env, { cleanup = false } = {}) {
-  const data = await sheetsGet(env, [
-    '지출내역!A3:I5000',
-    '대출내역!A3:I500',
-    '월정산!A3:P500',
-    'SETTINGS!B9:B12',
+  const [expenses, loans, data] = await Promise.all([
+    listExpenses(env),
+    listLoans(env),
+    sheetsGet(env, [
+      '월정산!A3:P500',
+      'SETTINGS!B9:B12',
+    ]),
   ]);
-  const [expensesRange, loansRange, settlementsRange, settingsRange] = data.valueRanges || [];
-  const expenses = (expensesRange?.values || []).map(normalizeExpense).filter(r => is2026Month(r.month));
-  const loans = (loansRange?.values || []).map(normalizeLoan).filter(r => is2026Month(r.month));
+  const [settlementsRange, settingsRange] = data.valueRanges || [];
   const settlementRows = settlementsRange?.values || [];
 
   const laborByMonth = new Map();

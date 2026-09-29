@@ -1,1 +1,1 @@
-kongmoney-v5.6.0-expenses-d1-sheet-sync
+kongmoney-v5.7.0-loans-d1

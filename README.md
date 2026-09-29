@@ -137,8 +137,18 @@ Cloudflare Pages + Google Sheets + GitHub 기반 공동 가계부입니다.
 - 대출/월정산 설정값은 기존 Google Sheet 연동 유지.
 - `/api/d1-status`에 `expensesCount`, `lastSheetSync` 진단값 추가.
 
+
+## v5.7.0 패치
+- 대출내역 저장소를 Google Sheet 실시간 쓰기에서 Cloudflare D1로 이관.
+- 최초 1회 기존 Google Sheet `대출내역`의 2026년 데이터를 D1 `loans` 테이블로 자동 마이그레이션.
+- 대출 조회/수정/초기화 및 `대출금 변동추이`를 D1 기준으로 변경.
+- 월정산 계산 시 지출/대출은 D1에서 읽고, 수고비/설정만 Google Sheet에서 읽도록 변경.
+- 상단 `시트 동기화` 버튼은 D1의 지출 + 대출을 Google Sheet에 백업하고 월정산까지 갱신.
+- `/api/d1-status`에 `loansCount` 추가.
+
 ## 배포/커밋 내역
 <!-- AUTO_DEPLOY_HISTORY -->
+- 2026-09-30 02:29 KST — chore: kongmoney ZIP deploy 09-29-22:42 — 12개 파일 업로드
 - 2026-09-30 02:20 KST — chore: kongmoney ZIP deploy 09-29-22:42 — 11개 파일 업로드
 - 2026-09-30 02:09 KST — chore: kongmoney ZIP deploy 09-29-22:42 — 29개 파일 업로드
 - 2026-09-30 00:14 KST — chore: kongmoney ZIP deploy 09-29-22:42 — 28개 파일 업로드

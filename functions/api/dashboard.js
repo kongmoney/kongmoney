@@ -2,6 +2,7 @@ import { json, bad } from './_lib/http.js';
 import { sheetsGet } from './_lib/google.js';
 import { getMonthMeta } from './_lib/monthmeta.js';
 import { listExpenses, getLastSheetSync } from './_lib/expense-store.js';
+import { listLoans } from './_lib/loan-store.js';
 
 const n = (v) => {
   const x = Number(v);
@@ -48,16 +49,6 @@ function normalizeExpense(row, sheetRow = null) {
   };
 }
 
-function normalizeLoan(row) {
-  return {
-    month: normalizeMonthValue(row[0]),
-    principal: n(row[1]),
-    interest: n(row[2]),
-    rate: n(row[3]),
-    balance: n(row[4]),
-    total: n(row[5]) || n(row[1]) + n(row[2]),
-  };
-}
 
 function monthRange(start, end) {
   if (!isMonth(start) || !isMonth(end) || start > end) return [];
@@ -98,18 +89,17 @@ export async function onRequestGet({ request, env }) {
     const month = new URL(request.url).searchParams.get('month');
     if (!/^2026-(0[1-9]|1[0-2])$/.test(month || '')) return bad('조회 월은 2026년 1월~12월만 지원합니다.');
 
-    const [expenses, data, lastSheetSync] = await Promise.all([
+    const [expenses, loans, data, lastSheetSync] = await Promise.all([
       listExpenses(env),
+      listLoans(env),
       sheetsGet(env, [
-        '대출내역!A3:I100',
         '월정산!A3:P14',
         'SETTINGS!B9:B12',
       ]),
       getLastSheetSync(env),
     ]);
 
-    const [loansRange, settlementsRange, settingsRange] = data.valueRanges || [];
-    const loans = (loansRange?.values || []).map(normalizeLoan).filter((r) => /^2026-(0[1-9]|1[0-2])$/.test(r.month));
+    const [settlementsRange, settingsRange] = data.valueRanges || [];
 
     const laborFeeByMonth = new Map();
     for (const row of settlementsRange?.values || []) {
@@ -126,7 +116,7 @@ export async function onRequestGet({ request, env }) {
 
     for (const ym of monthRange('2026-01', month)) {
       const monthExpenses = expenses.filter((r) => r.month === ym);
-      const loan = loans.find((r) => r.month === ym) || normalizeLoan([]);
+      const loan = loans.find((r) => r.month === ym) || { principal:0, interest:0, rate:0, balance:0, total:0 };
       const living = monthExpenses.reduce((sum, r) => sum + r.amount, 0);
       const managerExpense = monthExpenses.reduce((sum, r) => sum + r.manager, 0);
       const memberAExpense = monthExpenses.reduce((sum, r) => sum + r.memberA, 0);
@@ -157,13 +147,14 @@ export async function onRequestGet({ request, env }) {
     const prevMonth = previousMonth(month);
     const previousSummary = /^2026-/.test(prevMonth) ? (summaryByMonth.get(prevMonth) || emptySummary(0)) : null;
     const monthExpenses = expenses.filter((r) => r.month === month).map(({ manager, memberA, memberB, ...rest }) => rest);
-    const loan = loans.find((r) => r.month === month) || normalizeLoan([]);
+    const loan = loans.find((r) => r.month === month) || { principal:0, interest:0, rate:0, balance:0, total:0 };
     const meta = await getMonthMeta(env, month);
 
     return json({
       ok: true,
       source: 'd1+google-sheets',
       expenseStorage: 'd1',
+      loanStorage: 'd1',
       lastSheetSync,
       month,
       summary,

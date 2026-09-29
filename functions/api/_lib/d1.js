@@ -45,6 +45,23 @@ export async function ensureAppTables(env) {
   )`).run();
   await db.prepare('CREATE INDEX IF NOT EXISTS idx_expenses_month ON expenses(month)').run();
 
+
+
+  await db.prepare(`CREATE TABLE IF NOT EXISTS loans (
+    month TEXT PRIMARY KEY,
+    principal INTEGER NOT NULL DEFAULT 0,
+    interest INTEGER NOT NULL DEFAULT 0,
+    rate REAL NOT NULL DEFAULT 0,
+    balance INTEGER NOT NULL DEFAULT 0,
+    total INTEGER NOT NULL DEFAULT 0,
+    manager_share REAL NOT NULL DEFAULT 0,
+    member_a_share REAL NOT NULL DEFAULT 0,
+    note TEXT NOT NULL DEFAULT '',
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+  )`).run();
+  await db.prepare('CREATE INDEX IF NOT EXISTS idx_loans_month ON loans(month)').run();
+
   await db.prepare(`CREATE TABLE IF NOT EXISTS app_state (
     key TEXT PRIMARY KEY,
     value TEXT NOT NULL DEFAULT '',
