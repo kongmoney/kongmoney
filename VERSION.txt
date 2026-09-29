@@ -1,1 +1,1 @@
-kongmoney-v5.10.0-settlement-table-view
+kongmoney-v5.10.1-view-toggle-fix

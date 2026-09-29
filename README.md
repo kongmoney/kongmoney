@@ -1,14 +1,15 @@
-# KongMoney v5.10.0 PATCH
+# KongMoney v5.10.1 PATCH
 
-- 카드 보기 / 정산표 보기 토글 추가
-- 정산표 보기에서 월 요약, 지출별 SH/JH/CE 분담, 대출, 수고비, 최종 정산, CE 자동이체 이월을 한 화면에 표시
-- 모바일에서는 요약은 카드형, 상세표는 가로 스크롤로 유지
-- dashboard 응답에 지출별 실제 분담금(manager/memberA/memberB)을 포함
+- 카드 보기 / 정산표 보기 토글 숨김 처리 수정
+- `hidden` 속성이 정산표 `display:flex` CSS에 덮이는 문제 수정
+- 마지막 보기 모드 localStorage 초기값 연결
+- 프론트 버전 5.10.1 반영
 
-적용: 기존 저장소 루트에 이 ZIP 내용을 경로 그대로 덮어쓰기.
+이 패치는 수정 파일만 포함합니다.
 
 ## 배포/커밋 내역
 <!-- AUTO_DEPLOY_HISTORY -->
+- 2026-09-30 03:17 KST — chore: kongmoney ZIP deploy 09-29-22:42 — 5개 파일 업로드
 - 2026-09-30 03:15 KST — chore: kongmoney ZIP deploy 09-29-22:42 — 6개 파일 업로드
 - 2026-09-30 03:11 KST — chore: kongmoney ZIP deploy 09-29-22:42 — 13개 파일 업로드
 - 2026-09-30 02:56 KST — chore: kongmoney ZIP deploy 09-29-22:42 — 10개 파일 업로드
