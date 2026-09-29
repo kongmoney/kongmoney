@@ -367,3 +367,27 @@ button{appearance:none}
 .danger-outline-btn{margin-top:10px;border:1px solid #e7b7c0;background:#fff7f8;color:#a84559;border-radius:999px;padding:13px 18px;font-weight:700;cursor:pointer}
 .danger-outline-btn:hover{background:#fff0f3;transform:translateY(-1px)}
 .danger-outline-btn:disabled{opacity:.55;cursor:wait;transform:none}
+
+
+/* v5.3.3 - compact loan balance + quick month jump */
+.month-bar{position:relative}
+.month-jump-btn{appearance:none;border:0;background:transparent;color:inherit;font:inherit;cursor:pointer;padding:4px 12px;border-radius:16px;min-width:150px}
+.month-jump-btn:hover{background:rgba(245,239,232,.7)}
+.month-jump-btn:focus-visible{outline:3px solid rgba(168,213,194,.55);outline-offset:2px}
+.month-jump-hint{display:block;margin-top:3px;font-size:10px;font-weight:600;color:#9a8d82}
+.month-picker{position:absolute;z-index:40;left:50%;top:calc(100% + 8px);transform:translateX(-50%);width:min(360px,calc(100vw - 34px));padding:14px;border:1px solid var(--line);border-radius:22px;background:#fffdf9;box-shadow:0 18px 45px rgba(75,61,51,.16)}
+.month-picker[hidden]{display:none}
+.month-picker-title{font-size:12px;font-weight:700;color:var(--muted);margin:0 0 10px 2px}
+.month-picker-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.month-picker-grid button{border:1px solid var(--line-strong);background:#fff;border-radius:14px;padding:10px 6px;font:inherit;font-size:13px;font-weight:700;color:#5f564f;cursor:pointer}
+.month-picker-grid button:hover{background:#f5efe8;transform:translateY(-1px)}
+.month-picker-grid button.active{background:#333;color:#fff;border-color:#333}
+#loanBalance{font-size:.86em;letter-spacing:-.045em;white-space:nowrap}
+@media(max-width:520px){
+  .month-jump-btn{min-width:112px;padding:2px 5px}
+  .month-jump-hint{font-size:9px}
+  .month-picker{top:calc(100% + 6px);width:min(320px,calc(100vw - 24px));padding:12px;border-radius:18px}
+  .month-picker-grid{grid-template-columns:repeat(4,1fr);gap:6px}
+  .month-picker-grid button{font-size:12px;padding:9px 4px;border-radius:12px}
+  #loanBalance{font-size:.78em}
+}

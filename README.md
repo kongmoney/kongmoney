@@ -77,8 +77,11 @@ Cloudflare Pages + Google Sheets + GitHub 기반 공동 가계부입니다.
 
 - 2026-09-29 — v5.3.2 — 지출 추가/삭제 속도 최적화: Google OAuth 토큰 캐시, 월정산 백그라운드 동기화, 저장마다 월정산 전체 clear 제거, 삭제 즉시 UI 반영
 
+- 2026-09-29 — v5.3.3 — 대출 상환후 잔액 글자 크기 보정, 조회 월 클릭형 1~12월 바로가기 패널 추가
+
 ## 배포/커밋 내역
 <!-- AUTO_DEPLOY_HISTORY -->
+- 2026-09-29 23:05 KST — chore: kongmoney ZIP deploy 09-29-22:42 — 22개 파일 업로드
 - 2026-09-29 22:56 KST — chore: kongmoney ZIP deploy 09-29-22:42 — 22개 파일 업로드
 - 2026-09-29 22:50 KST — chore: kongmoney ZIP deploy 09-29-22:42 — 22개 파일 업로드
 - 2026-09-29 22:42 KST — chore: kongmoney ZIP deploy 09-29-22:42 — 22개 파일 업로드

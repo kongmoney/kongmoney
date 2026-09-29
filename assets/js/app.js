@@ -70,6 +70,24 @@ function mergePendingExpenses(data, month){
 }
 
 function formatMonth(ym){ const [y,m]=ym.split('-'); return `${y}년 ${Number(m)}월`; }
+
+function setMonthPickerActive(){
+  document.querySelectorAll('[data-month-jump]').forEach(btn=>{
+    btn.classList.toggle('active', btn.dataset.monthJump===state.month);
+  });
+}
+function closeMonthPicker(){
+  const picker=$('monthPicker'); const btn=$('monthJumpBtn');
+  if(!picker || !btn) return;
+  picker.hidden=true; btn.setAttribute('aria-expanded','false');
+}
+function toggleMonthPicker(){
+  const picker=$('monthPicker'); const btn=$('monthJumpBtn');
+  if(!picker || !btn) return;
+  const opening=picker.hidden;
+  picker.hidden=!opening; btn.setAttribute('aria-expanded', opening ? 'true':'false');
+  if(opening) setMonthPickerActive();
+}
 function shiftMonth(ym, delta){ const [y,m]=ym.split('-').map(Number); const d=new Date(y,m-1+delta,1); const next=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`; if(next<'2026-01') return '2026-01'; if(next>'2026-12') return '2026-12'; return next; }
 function emptyDashboard(month){ return {month,summary:{living:0,loan:0,total:0,managerFinal:0,memberAFinal:0,memberBFinal:0,carryIn:0,autoTransfer:0,carryOut:0},expenses:[],loan:{principal:0,interest:0,total:0,balance:0,rate:0}}; }
 function escapeHtml(v){return String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));}
@@ -127,6 +145,7 @@ function expenseBadge(category){
 function renderDashboardFields(){
   const d=state.data || emptyDashboard(state.month); const s=d.summary || {}; const loan=d.loan || {};
   $('monthLabel').textContent=formatMonth(state.month);
+  setMonthPickerActive();
   $('totalExpense').textContent=money(s.total);
   $('expenseBreakdown').textContent=`생활비 ${money(s.living)} · 대출 ${money(s.loan)}`;
   $('managerFinal').textContent=money(s.managerFinal);
@@ -284,6 +303,16 @@ async function load(){
 
 $('prevMonth').addEventListener('click',()=>{state.month=shiftMonth(state.month,-1); rememberMonth(state.month); load();});
 $('nextMonth').addEventListener('click',()=>{state.month=shiftMonth(state.month,1); rememberMonth(state.month); load();});
+$('monthJumpBtn')?.addEventListener('click',(e)=>{ e.stopPropagation(); toggleMonthPicker(); });
+document.querySelectorAll('[data-month-jump]').forEach(btn=>btn.addEventListener('click',()=>{
+  state.month=btn.dataset.monthJump;
+  rememberMonth(state.month);
+  closeMonthPicker();
+  load();
+}));
+$('monthPicker')?.addEventListener('click',(e)=>e.stopPropagation());
+document.addEventListener('click',closeMonthPicker);
+document.addEventListener('keydown',(e)=>{ if(e.key==='Escape') closeMonthPicker(); });
 $('refreshBtn').addEventListener('click',load);
 document.querySelectorAll('.chip').forEach(btn=>btn.addEventListener('click',()=>{
   document.querySelectorAll('.chip').forEach(x=>x.classList.remove('active'));
