@@ -81,8 +81,8 @@ function monthRange(start, end) {
 }
 
 function autoTransferForMonth(ym, configured) {
-  if (ym === '2025-01' || ym === '2025-02') return 300000;
-  if (ym >= '2025-03') return 400000;
+  if (ym === '2026-01' || ym === '2026-02') return 300000;
+  if (ym >= '2026-03') return 400000;
   return configured || 400000;
 }
 

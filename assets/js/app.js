@@ -2,6 +2,7 @@ const today = new Date();
 const initialMonth = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
 const STORAGE_MONTH_KEY = 'kongmoney.selectedMonth';
 const STORAGE_PENDING_KEY = 'kongmoney.pendingExpenses';
+const SETTLEMENT_SYNC_VERSION = '2026-autotransfer-v2';
 const savedMonth = (() => { try { return localStorage.getItem(STORAGE_MONTH_KEY) || ''; } catch { return ''; } })();
 const state = { month: /^\d{4}-\d{2}$/.test(savedMonth) ? savedMonth : initialMonth, filter: '전체', data: null, loading: false };
 const won = new Intl.NumberFormat('ko-KR', { maximumFractionDigits: 0 });
@@ -9,6 +10,21 @@ const $ = (id) => document.getElementById(id);
 const money = (n) => `${won.format(Number(n || 0))}원`;
 
 function rememberMonth(ym){ try { localStorage.setItem(STORAGE_MONTH_KEY, ym); } catch {} }
+
+async function syncSettlementOnce(){
+  const key=`kongmoney.settlementSync.${SETTLEMENT_SYNC_VERSION}`;
+  try {
+    if(sessionStorage.getItem(key)==='done') return false;
+    const res=await fetch('/api/settlement-sync',{method:'POST',headers:{accept:'application/json'}});
+    const body=await res.json().catch(()=>({}));
+    if(!res.ok || body.ok===false) throw new Error(body.error || `월정산 동기화 실패 (${res.status})`);
+    sessionStorage.setItem(key,'done');
+    return true;
+  } catch(err) {
+    console.warn('monthly settlement sync skipped:', err);
+    return false;
+  }
+}
 function expenseKey(row){
   return [row?.month,row?.category,row?.subcategory,row?.description,row?.amount,row?.splitType].map(v=>String(v ?? '')).join('|');
 }
@@ -323,7 +339,10 @@ $('loanForm').addEventListener('submit',async(e)=>{
     loanDlg.close();
     showToast('대출내역을 Google Sheet에 반영했습니다.');
     await rememberMonth(state.month);
-load();
+load().then(async()=>{
+  const synced=await syncSettlementOnce();
+  if(synced) await load();
+});
   }catch(err){
     showToast(err.message || '대출내역 저장에 실패했습니다.','error');
   }finally{

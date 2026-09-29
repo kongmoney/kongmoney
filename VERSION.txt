@@ -1,1 +1,1 @@
-kongmoney-v5.2.7-monthly-settlement-sync
+kongmoney-v5.2.8-2026-autotransfer-fix
