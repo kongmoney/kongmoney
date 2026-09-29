@@ -1,1 +1,1 @@
-kongmoney-v5.5.0-d1-app-state
+kongmoney-v5.5.1-d1-verified-recurring

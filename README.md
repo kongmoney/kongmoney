@@ -120,8 +120,11 @@ Cloudflare Pages + Google Sheets + GitHub 기반 공동 가계부입니다.
 
 이전 테스트용 반복지출/월메모 데이터는 새 D1로 자동 이전하지 않습니다. D1 연결 후 다시 등록해주세요.
 
+- 2026-09-29 — v5.5.1 — D1 반복지출 저장 검증 강화, DDL 개별 실행, 저장 후 D1 재조회 확인, `/api/d1-status` 진단 엔드포인트 추가.
+
 ## 배포/커밋 내역
 <!-- AUTO_DEPLOY_HISTORY -->
+- 2026-09-30 00:14 KST — chore: kongmoney ZIP deploy 09-29-22:42 — 28개 파일 업로드
 - 2026-09-30 00:05 KST — chore: kongmoney ZIP deploy 09-29-22:42 — 27개 파일 업로드
 - 2026-09-29 23:50 KST — chore: kongmoney ZIP deploy 09-29-22:42 — 25개 파일 업로드
 - 2026-09-29 23:36 KST — chore: kongmoney ZIP deploy 09-29-22:42 — 25개 파일 업로드
