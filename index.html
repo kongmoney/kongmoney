@@ -17,7 +17,7 @@
         <div class="hero-pills">
           <span class="pill mint">공동 가계부</span>
           <span class="pill pink">자동 정산</span>
-          <span class="pill yellow">B 자동이체 이월</span>
+          <span class="pill yellow">CE 자동이체 이월</span>
         </div>
       </div>
       <div class="hero-visual" aria-hidden="true">
@@ -50,7 +50,7 @@
         <div class="hero-side-item">
           <span class="icon-circle yellow">↺</span>
           <div>
-            <strong>B 자동이체도 반영돼요</strong>
+            <strong>CE 자동이체도 반영돼요</strong>
             <p>40만원 자동이체와 남은 차액을 다음 달까지 이어서 봐요.</p>
           </div>
         </div>
@@ -81,17 +81,17 @@
             <small id="expenseBreakdown">생활비 - · 대출 -</small>
           </article>
           <article class="summary-card pink">
-            <span class="summary-label">총무 최종 부담</span>
+            <span class="summary-label">SH 최종 부담</span>
             <strong id="managerFinal">-</strong>
             <small>이번 달 기준 실 부담액</small>
           </article>
           <article class="summary-card sky">
-            <span class="summary-label">구성원 A 최종 입금</span>
+            <span class="summary-label">JH 최종 입금</span>
             <strong id="memberAFinal">-</strong>
-            <small>총무에게 입금할 금액</small>
+            <small>SH에게 입금할 금액</small>
           </article>
           <article class="summary-card yellow">
-            <span class="summary-label">구성원 B 정산액</span>
+            <span class="summary-label">CE 정산액</span>
             <strong id="memberBFinal">-</strong>
             <small>자동이체 기준 정산액</small>
           </article>
@@ -140,7 +140,7 @@
             <div class="feature-list simple-list">
               <div><span class="dot mint"></span><p>Google Sheet와 연동되어 실시간으로 정산돼요.</p></div>
               <div><span class="dot pink"></span><p>생활비와 기타비용을 분담방식에 따라 자동 계산해요.</p></div>
-              <div><span class="dot yellow"></span><p>B 자동이체 차액을 다음 달로 그대로 이어서 보여줘요.</p></div>
+              <div><span class="dot yellow"></span><p>CE 자동이체 차액을 다음 달로 그대로 이어서 보여줘요.</p></div>
             </div>
             <div class="palette-row">
               <span class="color-chip mint"></span>
@@ -157,7 +157,7 @@
         <section class="card note-card section-card transfer-card">
           <div class="section-heading compact-heading">
             <div>
-              <span class="section-kicker">구성원 B</span>
+              <span class="section-kicker">CE</span>
               <h2>40만원 자동이체 · 이월</h2>
             </div>
             <span class="badge">매월 자동</span>
@@ -196,7 +196,7 @@
           <div class="guide-steps">
             <div class="guide-step"><span class="step-badge mint">1</span><p>지출 내역에 생활비나 기타 비용을 추가해요.</p></div>
             <div class="guide-step"><span class="step-badge pink">2</span><p>분담방식에 따라 각자 금액이 자동으로 계산돼요.</p></div>
-            <div class="guide-step"><span class="step-badge yellow">3</span><p>B의 40만원 자동이체와 남은 차액은 다음 달에 반영돼요.</p></div>
+            <div class="guide-step"><span class="step-badge yellow">3</span><p>CE의 40만원 자동이체와 남은 차액은 다음 달에 반영돼요.</p></div>
           </div>
         </section>
 
@@ -208,8 +208,8 @@
             </div>
           </div>
           <ul class="spec-list">
-            <li><span>구성원 수</span><strong>총무 · A · B</strong></li>
-            <li><span>B 자동이체</span><strong>매월 400,000원</strong></li>
+            <li><span>구성원 수</span><strong>SH · JH · CE</strong></li>
+            <li><span>CE 자동이체</span><strong>매월 400,000원</strong></li>
             <li><span>데이터 원본</span><strong>Google Sheet</strong></li>
             <li><span>배포 환경</span><strong>Cloudflare Pages</strong></li>
           </ul>
@@ -240,7 +240,7 @@
       <label>분담방식
         <select name="splitType" required>
           <option value="3인 공동">3인 공동</option>
-          <option value="총무+구성원 A">총무 + 구성원 A</option>
+          <option value="총무+구성원 A">SH + JH</option>
         </select>
       </label>
       <button class="primary-btn full" type="submit" value="default">저장</button>

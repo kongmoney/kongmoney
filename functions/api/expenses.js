@@ -6,6 +6,8 @@ const TWO_PERSON_ALIASES = new Set([
   '총무+구성원 A 부담',
   '총무 + 구성원 A',
   '2인 공동',
+  'SH+JH',
+  'SH + JH',
 ]);
 
 export async function onRequestPost({ request, env }) {

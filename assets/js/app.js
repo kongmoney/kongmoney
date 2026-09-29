@@ -31,6 +31,12 @@ async function getDashboard(month){
   return body;
 }
 
+function splitLabel(v){
+  const x=String(v||'');
+  if(['총무+구성원 A','총무+구성원 A 부담','총무 + 구성원 A','SH+JH','SH + JH','2인 공동'].includes(x)) return 'SH + JH';
+  return x;
+}
+
 function expenseBadge(category){
   if(category === '생활비') return { cls: 'life', icon: '🏠' };
   if(category === '기타/부속') return { cls: 'extra', icon: '🧺' };
@@ -75,7 +81,7 @@ function renderExpenses(){
           <div class="expense-meta">${escapeHtml(row.description||'-')}</div>
           <div class="expense-tags">
             <span class="expense-tag">${escapeHtml(row.category)}</span>
-            <span class="expense-tag">${escapeHtml(row.splitType||'-')}</span>
+            <span class="expense-tag">${escapeHtml(splitLabel(row.splitType)||'-')}</span>
           </div>
         </div>
       </div>

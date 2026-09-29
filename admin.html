@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#f8f4ee" />
+  <title>콩머니 관리자</title>
+  <link rel="stylesheet" href="/assets/css/admin.css" />
+</head>
+<body>
+  <main class="admin-shell">
+    <header class="admin-hero card">
+      <div>
+        <p class="eyebrow">KONGMONEY ADMIN</p>
+        <h1>콩머니 관리자</h1>
+        <p>ZIP 파일 하나로 GitHub 커밋부터 Cloudflare Pages 배포 확인까지 한 번에 관리합니다.</p>
+      </div>
+      <a class="ghost-btn" href="/">사용자 화면 ↗</a>
+    </header>
+
+    <section class="card auth-card">
+      <div>
+        <span class="section-kicker">관리자 인증</span>
+        <h2>ADMIN KEY</h2>
+        <p>Cloudflare Secret의 <code>ADMIN_KEY</code>와 같은 값을 입력하세요. 브라우저 탭을 닫으면 자동으로 지워집니다.</p>
+      </div>
+      <div class="auth-row">
+        <input id="adminKey" type="password" autocomplete="current-password" placeholder="관리자 키" />
+        <button id="saveAdminKey" class="primary-btn" type="button">적용</button>
+      </div>
+    </section>
+
+    <section class="grid-two">
+      <section class="card upload-card">
+        <div class="section-heading">
+          <div>
+            <span class="section-kicker">ZIP DEPLOY</span>
+            <h2>ZIP 업로드 · 커밋</h2>
+          </div>
+          <span id="zipBadge" class="badge">파일 선택 전</span>
+        </div>
+
+        <label id="dropZone" class="drop-zone" for="zipInput">
+          <input id="zipInput" type="file" accept=".zip,application/zip" hidden />
+          <span class="drop-icon">⇧</span>
+          <strong>배포할 ZIP 파일을 선택하거나 끌어놓으세요</strong>
+          <small>압축 안의 소스 파일을 풀어 GitHub에 덮어쓰기 커밋합니다.</small>
+        </label>
+
+        <div id="zipInfo" class="zip-info" hidden>
+          <div><span>ZIP 파일</span><strong id="zipName">-</strong></div>
+          <div><span>파일 수</span><strong id="zipCount">-</strong></div>
+          <div><span>압축 해제 크기</span><strong id="zipSize">-</strong></div>
+        </div>
+
+        <label class="field-label">커밋 메시지
+          <input id="commitMessage" type="text" maxlength="120" placeholder="예: feat: 관리자 배포 기능 추가" />
+        </label>
+
+        <div class="notice-box">
+          <strong>안전한 덮어쓰기 방식</strong>
+          <p>ZIP에 포함된 파일만 추가/수정하며, ZIP에 없는 기존 GitHub 파일은 삭제하지 않습니다. README.md의 배포/커밋 내역은 자동으로 추가됩니다.</p>
+        </div>
+
+        <button id="deployBtn" class="deploy-btn" type="button" disabled>GitHub 커밋 후 배포 시작</button>
+        <p id="deployProgress" class="progress-text"></p>
+      </section>
+
+      <section class="card status-card">
+        <div class="section-heading">
+          <div>
+            <span class="section-kicker">DEPLOY STATUS</span>
+            <h2>배포 상태</h2>
+          </div>
+          <button id="refreshStatus" class="refresh-btn" type="button">배포 상태 새로고침</button>
+        </div>
+
+        <article class="status-block github-block">
+          <p class="status-title">GITHUB COMMIT</p>
+          <strong id="githubState" class="status-main">확인 전</strong>
+          <div id="githubDetail" class="status-detail">관리자 키를 적용한 뒤 새로고침하세요.</div>
+        </article>
+
+        <article class="status-block cloudflare-block">
+          <p class="status-title">CLOUDFLARE PAGES</p>
+          <strong id="cloudflareState" class="status-main">확인 전</strong>
+          <div id="cloudflareDetail" class="status-detail">배포 상태를 불러오면 여기에 표시됩니다.</div>
+        </article>
+
+        <p id="checkedAt" class="checked-at"></p>
+      </section>
+    </section>
+
+    <section class="card config-card">
+      <div>
+        <span class="section-kicker">필요한 CLOUDFLARE VARIABLES / SECRETS</span>
+        <h2>관리자 배포 설정</h2>
+      </div>
+      <div class="config-grid">
+        <div><code>ADMIN_KEY</code><span>관리자 페이지 인증키 · Secret</span></div>
+        <div><code>GITHUB_TOKEN</code><span>GitHub Contents write 권한 · Secret</span></div>
+        <div><code>GITHUB_OWNER</code><span>기본값 rjs1127</span></div>
+        <div><code>GITHUB_REPO</code><span>기본값 kongmoney</span></div>
+        <div><code>GITHUB_BRANCH</code><span>기본값 main</span></div>
+        <div><code>CLOUDFLARE_ACCOUNT_ID</code><span>Cloudflare Account ID</span></div>
+        <div><code>CLOUDFLARE_API_TOKEN</code><span>Pages 조회 권한 · Secret</span></div>
+        <div><code>CLOUDFLARE_PROJECT_NAME</code><span>기본값 kongmoney</span></div>
+      </div>
+    </section>
+  </main>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script type="module" src="/assets/js/admin.js"></script>
+</body>
+</html>
