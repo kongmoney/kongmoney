@@ -79,8 +79,17 @@ Cloudflare Pages + Google Sheets + GitHub 기반 공동 가계부입니다.
 
 - 2026-09-29 — v5.3.3 — 대출 상환후 잔액 글자 크기 보정, 조회 월 클릭형 1~12월 바로가기 패널 추가
 
+## v5.4.0 · 2026-09-29
+- 반복지출 템플릿: SETTINGS D:J에 저장, 이번 달 빠른 등록 지원
+- 월별 비교: 생활비 및 SH/JH/CE 최종 부담액 전월 대비 표시
+- 지출 수정: 지출 카드 클릭 → 수정 → Google Sheet 해당 행 즉시 갱신
+- 월별 메모: SETTINGS L:M에 월별 메모 저장
+- 월 마감: SETTINGS N열에 상태 저장, 마감된 달의 지출 추가/수정/삭제 및 대출 수정 잠금
+- 기존 지출/대출/월정산/CE 자동이체/관리자 ZIP 배포 기능 유지
+
 ## 배포/커밋 내역
 <!-- AUTO_DEPLOY_HISTORY -->
+- 2026-09-29 23:18 KST — chore: kongmoney ZIP deploy 09-29-22:42 — 25개 파일 업로드
 - 2026-09-29 23:05 KST — chore: kongmoney ZIP deploy 09-29-22:42 — 22개 파일 업로드
 - 2026-09-29 22:56 KST — chore: kongmoney ZIP deploy 09-29-22:42 — 22개 파일 업로드
 - 2026-09-29 22:50 KST — chore: kongmoney ZIP deploy 09-29-22:42 — 22개 파일 업로드

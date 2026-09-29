@@ -96,22 +96,22 @@
           <article class="summary-card mint">
             <span class="summary-label">이번 달 전체 지출</span>
             <strong id="totalExpense">-</strong>
-            <small id="expenseBreakdown">생활비 - · 대출 -</small>
+            <small id="expenseBreakdown">생활비 - · 대출 -</small><small id="livingCompare" class="summary-compare">전월 비교 -</small>
           </article>
           <article class="summary-card pink">
             <span class="summary-label">SH 최종 부담</span>
             <strong id="managerFinal">-</strong>
-            <small>이번 달 기준 실 부담액</small>
+            <small>이번 달 기준 실 부담액</small><small id="managerCompare" class="summary-compare">전월 비교 -</small>
           </article>
           <article class="summary-card sky">
             <span class="summary-label">JH 최종 입금</span>
             <strong id="memberAFinal">-</strong>
-            <small>SH에게 입금할 금액</small>
+            <small>SH에게 입금할 금액</small><small id="memberACompare" class="summary-compare">전월 비교 -</small>
           </article>
           <article class="summary-card yellow">
             <span class="summary-label">CE 정산액</span>
             <strong id="memberBFinal">-</strong>
-            <small>자동이체 기준 정산액</small>
+            <small>자동이체 기준 정산액</small><small id="memberBCompare" class="summary-compare">전월 비교 -</small>
           </article>
         </section>
 
@@ -121,8 +121,12 @@
               <span class="section-kicker">EXPENSES</span>
               <h2>지출 내역</h2>
             </div>
-            <button id="addExpenseBtn" class="primary-btn" type="button">+ 지출 추가</button>
+            <div class="section-actions">
+              <button id="recurringManageBtn" class="secondary-btn" type="button">↻ 반복지출</button>
+              <button id="addExpenseBtn" class="primary-btn" type="button">+ 지출 추가</button>
+            </div>
           </div>
+          <div id="recurringQuickList" class="recurring-quick-list" aria-label="반복지출 빠른 등록"></div>
           <div class="filter-row" id="categoryFilters">
             <button class="chip active" data-filter="전체">전체</button>
             <button class="chip" data-filter="생활비">생활비</button>
@@ -174,6 +178,22 @@
       </section>
 
       <aside class="content-side">
+        <section class="card note-card section-card month-control-card">
+          <div class="section-heading compact-heading">
+            <div>
+              <span class="section-kicker">MONTH NOTE</span>
+              <h2>월 메모 · 마감</h2>
+            </div>
+            <span id="monthCloseBadge" class="month-close-badge open">진행중</span>
+          </div>
+          <textarea id="monthMemo" class="month-memo" maxlength="500" placeholder="예: 10월 여행비 포함 · 관리비 미납"></textarea>
+          <div class="month-control-actions">
+            <button id="saveMonthMemoBtn" class="secondary-btn" type="button">메모 저장</button>
+            <button id="toggleMonthCloseBtn" class="primary-btn small" type="button">정산 마감</button>
+          </div>
+          <p id="monthCloseHelp" class="helper-text">마감하면 이 달의 지출·대출 수정이 잠겨요.</p>
+        </section>
+
         <section class="card note-card section-card transfer-card">
           <div class="section-heading compact-heading">
             <div>
@@ -242,8 +262,8 @@
     <form id="expenseForm" method="dialog" class="dialog-card">
       <div class="dialog-header">
         <div>
-          <span class="section-kicker">NEW EXPENSE</span>
-          <h2>지출 추가</h2>
+          <span id="expenseDialogKicker" class="section-kicker">NEW EXPENSE</span>
+          <h2 id="expenseDialogTitle">지출 추가</h2>
         </div>
         <button id="closeExpenseDialog" class="close-btn" type="button" aria-label="닫기">×</button>
       </div>
@@ -254,20 +274,48 @@
           <option value="기타/부속">기타/부속</option>
         </select>
       </label>
-      <label>소분류<input name="subcategory" type="text" placeholder="예: 관리비" required /></label>
-      <label>내역/비고<input name="description" type="text" placeholder="예: 아파트 관리비" /></label>
+      <label>소분류<input id="expenseSubcategory" name="subcategory" type="text" placeholder="예: 관리비" required /></label>
+      <label>내역/비고<input id="expenseDescription" name="description" type="text" placeholder="예: 아파트 관리비" /></label>
       <label>금액<input id="expenseAmount" name="amount" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="off" placeholder="숫자만 입력" required /></label>
       <label>분담방식
-        <select name="splitType" required>
+        <select id="expenseSplitType" name="splitType" required>
           <option value="3인 공동">3인 공동</option>
           <option value="JH + SH">JH + SH</option>
           <option value="JH + CE">JH + CE</option>
           <option value="SH + JH">SH + JH</option>
         </select>
       </label>
-      <button class="primary-btn full" type="submit" value="default">저장</button>
+      <label id="saveAsRecurringWrap" class="check-row"><input id="saveAsRecurring" type="checkbox" /> <span>이 지출을 반복지출로 저장</span></label>
+      <button id="expenseSaveBtn" class="primary-btn full" type="submit" value="default">저장</button>
       <p class="helper-text">저장하면 Google Sheet의 지출내역 탭에 바로 반영됩니다.</p>
     </form>
+  </dialog>
+
+  <dialog id="recurringDialog" class="dialog">
+    <section class="dialog-card recurring-dialog-card">
+      <div class="dialog-header">
+        <div>
+          <span class="section-kicker">RECURRING EXPENSE</span>
+          <h2>반복지출 관리</h2>
+          <p class="dialog-subtitle">한 번 등록해두고 원하는 달에 빠르게 추가해요.</p>
+        </div>
+        <button id="closeRecurringDialog" class="close-btn" type="button" aria-label="닫기">×</button>
+      </div>
+      <form id="recurringForm" class="recurring-form">
+        <input id="recurringSheetRow" type="hidden" />
+        <input id="recurringId" type="hidden" />
+        <label>이름<input id="recurringName" type="text" placeholder="예: 관리비" required /></label>
+        <label>대분류<select id="recurringCategory" required><option value="생활비">생활비</option><option value="기타/부속">기타/부속</option></select></label>
+        <label>소분류<input id="recurringSubcategory" type="text" placeholder="예: 관리비" required /></label>
+        <label>내역/비고<input id="recurringDescription" type="text" placeholder="예: 아파트 관리비" /></label>
+        <label>금액<input id="recurringAmount" class="numeric-only" type="text" inputmode="numeric" pattern="[0-9]*" required /></label>
+        <label>분담방식<select id="recurringSplitType" required><option value="3인 공동">3인 공동</option><option value="JH + SH">JH + SH</option><option value="JH + CE">JH + CE</option><option value="SH + JH">SH + JH</option></select></label>
+        <button id="recurringSaveBtn" class="primary-btn full" type="submit">반복지출 저장</button>
+        <button id="recurringCancelEditBtn" class="secondary-btn full" type="button" hidden>수정 취소</button>
+      </form>
+      <div class="recurring-list-head"><strong>저장된 반복지출</strong><span id="recurringCount">0개</span></div>
+      <div id="recurringManageList" class="recurring-manage-list"></div>
+    </section>
   </dialog>
 
   <dialog id="loanDialog" class="dialog">

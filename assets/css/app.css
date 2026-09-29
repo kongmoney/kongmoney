@@ -391,3 +391,35 @@ button{appearance:none}
   .month-picker-grid button{font-size:12px;padding:9px 4px;border-radius:12px}
   #loanBalance{font-size:.78em}
 }
+
+/* v5.4.0 - recurring expenses / comparison / edit / memo / month close */
+.section-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.secondary-btn{border:1px solid var(--line-strong);background:#fff;color:#554c45;border-radius:999px;padding:11px 15px;font-family:inherit;font-weight:700;cursor:pointer;box-shadow:var(--shadow-soft)}
+.secondary-btn.full{width:100%;margin-top:8px}
+.primary-btn.small{padding:10px 14px}
+button:disabled{opacity:.5;cursor:not-allowed;transform:none!important}
+.summary-compare{margin-top:6px!important;padding-top:7px;border-top:1px dashed rgba(70,60,50,.14);font-size:11px!important;line-height:1.45!important;color:#887b72!important}
+.recurring-quick-list{display:flex;gap:8px;overflow-x:auto;padding:14px 1px 3px;scrollbar-width:thin}
+.recurring-empty{font-size:12px;color:var(--muted);padding:8px 3px}
+.recurring-quick-item{min-width:178px;border:1px solid var(--line);background:#fffaf5;border-radius:16px;padding:10px 12px;text-align:left;display:flex;justify-content:space-between;align-items:center;gap:10px;font-family:inherit;cursor:pointer}
+.recurring-quick-item span{min-width:0}.recurring-quick-item strong{display:block;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.recurring-quick-item small{display:block;color:var(--muted);font-size:11px;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.recurring-quick-item b{font-size:11px;color:#5e8c7d;white-space:nowrap}
+.expense-row.editable{cursor:pointer}.expense-row.editable:hover{border-color:#d5c7b9;box-shadow:0 7px 18px rgba(70,54,40,.06)}
+.expense-row.locked{cursor:default;background:#fcfaf7}.expense-edit-hint{display:inline-block;color:#9a8a7c;font-size:10px;padding:5px 8px;border-radius:999px;background:#f7f2ed}
+.locked-label{font-size:10px;color:#9d8f83;background:#f1ece6;padding:5px 8px;border-radius:999px;white-space:nowrap}
+.check-row{display:flex!important;align-items:center;gap:8px!important;padding:10px 2px!important;font-size:13px!important}.check-row input{width:auto!important;margin:0!important}
+.month-control-card{background:linear-gradient(180deg,#fffdfb,#fff8f1)}
+.month-close-badge{display:inline-flex;align-items:center;justify-content:center;border-radius:999px;padding:7px 10px;font-size:11px;font-weight:800}.month-close-badge.open{background:#edf8f3;color:#437866}.month-close-badge.closed{background:#f1ece7;color:#75685f}
+.month-memo{width:100%;min-height:82px;resize:vertical;margin-top:15px;border:1px solid var(--line-strong);border-radius:16px;background:#fff;padding:12px 13px;font-family:inherit;font-size:13px;line-height:1.55;color:#3d3631;outline:none}.month-memo:focus{border-color:#b9d9cd;box-shadow:0 0 0 3px rgba(185,217,205,.2)}
+.month-control-actions{display:flex;gap:8px;margin-top:10px}.month-control-actions>*{flex:1}.danger-soft{background:#75685f!important;color:#fff!important}
+.month-closed .loan-edit-hint{color:#a99c91}.month-closed .loan-edit-hint::after{content:' · 정산 마감됨'}
+.recurring-dialog-card{width:min(680px,calc(100vw - 28px));max-height:min(86vh,800px);overflow:auto}
+.recurring-form{display:grid;grid-template-columns:1fr 1fr;gap:12px}.recurring-form label:nth-of-type(1),.recurring-form label:nth-of-type(4){grid-column:1/-1}.recurring-form .full{grid-column:1/-1}
+.recurring-list-head{display:flex;align-items:center;justify-content:space-between;margin-top:22px;padding-top:18px;border-top:1px dashed var(--line-strong);font-size:13px}.recurring-list-head span{color:var(--muted)}
+.recurring-manage-list{display:flex;flex-direction:column;gap:8px;margin-top:10px}.recurring-manage-item{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px;border:1px solid var(--line);border-radius:16px;background:#fff}.recurring-manage-item strong{display:block;font-size:13px}.recurring-manage-item small{display:block;color:var(--muted);font-size:11px;margin-top:4px}.recurring-manage-actions{display:flex;gap:5px}.recurring-manage-actions button{border:1px solid var(--line);background:#fff;border-radius:999px;padding:7px 9px;font-family:inherit;font-size:11px;font-weight:700;cursor:pointer}.recurring-manage-actions .danger-text{color:#b05c68}
+@media(max-width:620px){
+  .section-actions{gap:6px}.section-actions .secondary-btn,.section-actions .primary-btn{padding:10px 12px;font-size:12px}
+  .summary-compare{font-size:10px!important}
+  .recurring-quick-item{min-width:155px;padding:9px 10px}
+  .month-control-actions{flex-direction:column}.recurring-form{grid-template-columns:1fr}.recurring-form label:nth-of-type(1),.recurring-form label:nth-of-type(4){grid-column:auto}.recurring-form .full{grid-column:auto}
+  .recurring-manage-item{align-items:flex-start;flex-direction:column}.recurring-manage-actions{width:100%;justify-content:flex-end}
+}

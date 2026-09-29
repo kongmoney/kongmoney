@@ -1,5 +1,6 @@
 import { json, bad } from './_lib/http.js';
 import { sheetsGet } from './_lib/google.js';
+import { parseMonthMetaRows } from './_lib/monthmeta.js';
 
 const n = (v) => {
   const x = Number(v);
@@ -11,7 +12,6 @@ const isMonth = (v) => /^\d{4}-\d{2}$/.test(v || '');
 function normalizeMonthValue(value) {
   if (value === null || value === undefined || value === '') return '';
   if (typeof value === 'number' && Number.isFinite(value)) {
-    // Google Sheets date serial: day 0 = 1899-12-30.
     const ms = Date.UTC(1899, 11, 30) + Math.round(value) * 86400000;
     const d = new Date(ms);
     if (!Number.isNaN(d.getTime())) return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}`;
@@ -28,20 +28,11 @@ function normalizeExpense(row, sheetRow = null) {
   let manager = n(row[6]);
   let memberA = n(row[7]);
   let memberB = n(row[8]);
-
-  // Backfill shares if an older row has no pre-calculated share columns.
   if (!manager && !memberA && !memberB && amount) {
-    if (splitType === '3인 공동') {
-      manager = memberA = memberB = amount / 3;
-    } else if (['JH + CE','JH+CE'].includes(splitType)) {
-      manager = 0;
-      memberA = memberB = amount / 2;
-    } else {
-      manager = memberA = amount / 2;
-      memberB = 0;
-    }
+    if (splitType === '3인 공동') manager = memberA = memberB = amount / 3;
+    else if (['JH + CE','JH+CE'].includes(splitType)) memberA = memberB = amount / 2;
+    else manager = memberA = amount / 2;
   }
-
   return {
     sheetRow,
     month: normalizeMonthValue(row[0]),
@@ -80,10 +71,25 @@ function monthRange(start, end) {
   return result;
 }
 
+function previousMonth(ym) {
+  const [y, m] = ym.split('-').map(Number);
+  if (m === 1) return `${y - 1}-12`;
+  return `${y}-${String(m - 1).padStart(2, '0')}`;
+}
+
 function autoTransferForMonth(ym, configured) {
   if (ym === '2026-01' || ym === '2026-02') return 300000;
   if (ym >= '2026-03') return 400000;
   return configured || 400000;
+}
+
+function emptySummary(carry = 0) {
+  return {
+    living: 0, loan: 0, total: 0,
+    managerBasic: 0, memberABasic: 0, memberBBasic: 0,
+    laborFee: 0, managerFinal: 0, memberAFinal: 0, memberBFinal: 0,
+    carryIn: carry, autoTransfer: 0, carryOut: carry,
+  };
 }
 
 export async function onRequestGet({ request, env }) {
@@ -96,9 +102,10 @@ export async function onRequestGet({ request, env }) {
       '대출내역!A3:I500',
       '월정산!A3:P500',
       'SETTINGS!B9:B12',
+      'SETTINGS!L3:N14',
     ]);
 
-    const [expensesRange, loansRange, settlementsRange, settingsRange] = data.valueRanges || [];
+    const [expensesRange, loansRange, settlementsRange, settingsRange, metaRange] = data.valueRanges || [];
     const expenses = (expensesRange?.values || []).map((row, i) => normalizeExpense(row, i + 3)).filter((r) => /^2026-(0[1-9]|1[0-2])$/.test(r.month));
     const loans = (loansRange?.values || []).map(normalizeLoan).filter((r) => /^2026-(0[1-9]|1[0-2])$/.test(r.month));
 
@@ -111,16 +118,14 @@ export async function onRequestGet({ request, env }) {
     const settingsRows = settingsRange?.values || [];
     const defaultLaborFee = n(settingsRows?.[0]?.[0]) || 200000;
     const configuredAutoTransfer = n(settingsRows?.[3]?.[0]) || 400000;
-
-    const carryStart = month.startsWith('2026-') ? '2026-01' : month;
+    const metaMap = parseMonthMetaRows(metaRange?.values || []);
 
     let carry = 0;
-    let requestedSummary = null;
+    const summaryByMonth = new Map();
 
-    for (const ym of monthRange(carryStart, month)) {
+    for (const ym of monthRange('2026-01', month)) {
       const monthExpenses = expenses.filter((r) => r.month === ym);
       const loan = loans.find((r) => r.month === ym) || normalizeLoan([]);
-
       const living = monthExpenses.reduce((sum, r) => sum + r.amount, 0);
       const managerExpense = monthExpenses.reduce((sum, r) => sum + r.manager, 0);
       const memberAExpense = monthExpenses.reduce((sum, r) => sum + r.memberA, 0);
@@ -129,7 +134,6 @@ export async function onRequestGet({ request, env }) {
       const total = living + loanTotal;
       const active = total > 0;
       const laborFee = active ? (laborFeeByMonth.get(ym) || defaultLaborFee) : 0;
-
       const managerBasic = managerExpense + loanTotal / 2;
       const memberABasic = memberAExpense + loanTotal / 2;
       const memberBBasic = memberBExpense;
@@ -139,43 +143,29 @@ export async function onRequestGet({ request, env }) {
       const carryIn = carry;
       const transferApplied = active ? autoTransferForMonth(ym, configuredAutoTransfer) : 0;
       const carryOut = active ? carryIn + transferApplied - memberBFinal : carryIn;
-
       if (active) carry = carryOut;
-
-      if (ym === month) {
-        requestedSummary = {
-          living,
-          loan: loanTotal,
-          total,
-          managerBasic,
-          memberABasic,
-          memberBBasic,
-          laborFee,
-          managerFinal,
-          memberAFinal,
-          memberBFinal,
-          carryIn,
-          autoTransfer: transferApplied,
-          carryOut,
-        };
-      }
+      summaryByMonth.set(ym, {
+        living, loan: loanTotal, total,
+        managerBasic, memberABasic, memberBBasic,
+        laborFee, managerFinal, memberAFinal, memberBFinal,
+        carryIn, autoTransfer: transferApplied, carryOut,
+      });
     }
 
-    const monthExpenses = expenses
-      .filter((r) => r.month === month)
-      .map(({ manager, memberA, memberB, ...rest }) => rest);
+    const summary = summaryByMonth.get(month) || emptySummary(carry);
+    const prevMonth = previousMonth(month);
+    const previousSummary = /^2026-/.test(prevMonth) ? (summaryByMonth.get(prevMonth) || emptySummary(0)) : null;
+    const monthExpenses = expenses.filter((r) => r.month === month).map(({ manager, memberA, memberB, ...rest }) => rest);
     const loan = loans.find((r) => r.month === month) || normalizeLoan([]);
+    const meta = metaMap.get(month) || { month, memo: '', closed: false };
 
     return json({
       ok: true,
       source: 'google-sheets',
       month,
-      summary: requestedSummary || {
-        living: 0, loan: 0, total: 0,
-        managerBasic: 0, memberABasic: 0, memberBBasic: 0,
-        laborFee: 0, managerFinal: 0, memberAFinal: 0, memberBFinal: 0,
-        carryIn: carry, autoTransfer: 0, carryOut: carry,
-      },
+      summary,
+      comparison: { previousMonth: previousSummary ? prevMonth : null, previous: previousSummary },
+      meta,
       expenses: monthExpenses,
       loan,
     });
