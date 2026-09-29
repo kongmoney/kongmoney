@@ -29,5 +29,27 @@ export async function ensureAppTables(env) {
     updated_at TEXT NOT NULL
   )`).run();
 
+  await db.prepare(`CREATE TABLE IF NOT EXISTS expenses (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    month TEXT NOT NULL,
+    category TEXT NOT NULL,
+    subcategory TEXT NOT NULL,
+    description TEXT NOT NULL DEFAULT '',
+    amount INTEGER NOT NULL,
+    split_type TEXT NOT NULL,
+    manager REAL NOT NULL DEFAULT 0,
+    member_a REAL NOT NULL DEFAULT 0,
+    member_b REAL NOT NULL DEFAULT 0,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+  )`).run();
+  await db.prepare('CREATE INDEX IF NOT EXISTS idx_expenses_month ON expenses(month)').run();
+
+  await db.prepare(`CREATE TABLE IF NOT EXISTS app_state (
+    key TEXT PRIMARY KEY,
+    value TEXT NOT NULL DEFAULT '',
+    updated_at TEXT NOT NULL
+  )`).run();
+
   return db;
 }

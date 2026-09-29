@@ -86,7 +86,10 @@
       </section>
       <div class="top-actions">
         <span id="connectionStatus" class="connection-status">연결 확인 중…</span>
-        <button id="refreshBtn" class="refresh-btn" type="button" aria-label="새로고침">↻ 새로고침</button>
+        <div class="top-action-buttons">
+          <button id="sheetSyncBtn" class="sheet-sync-btn" type="button" title="D1 지출내역을 Google Sheet에 반영">⇄ 시트 동기화</button>
+          <button id="refreshBtn" class="refresh-btn" type="button" aria-label="새로고침">↻ 새로고침</button>
+        </div>
       </div>
     </div>
 
@@ -287,7 +290,7 @@
       </label>
       <label id="saveAsRecurringWrap" class="check-row"><input id="saveAsRecurring" name="saveAsRecurring" type="checkbox" /> <span>이 지출을 반복지출로 저장</span></label>
       <button id="expenseSaveBtn" class="primary-btn full" type="submit" value="default">저장</button>
-      <p class="helper-text">저장하면 Google Sheet의 지출내역 탭에 바로 반영됩니다.</p>
+      <p class="helper-text">지출은 D1에 즉시 저장됩니다. Google Sheet는 상단 ‘시트 동기화’ 버튼으로 반영할 수 있어요.</p>
     </form>
   </dialog>
 
@@ -367,7 +370,7 @@
   </dialog>
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
-  <div class="build-version" aria-label="버전">v5.5.4</div>
-  <script src="/assets/js/app-v5.5.4.js?v=553" type="module"></script>
+  <div class="build-version" aria-label="버전">v5.6.0</div>
+  <script src="/assets/js/app-v5.6.0.js?v=560" type="module"></script>
 </body>
 </html>

@@ -1,6 +1,7 @@
 import { json, bad } from './_lib/http.js';
 import { sheetsGet } from './_lib/google.js';
 import { getMonthMeta } from './_lib/monthmeta.js';
+import { listExpenses, getLastSheetSync } from './_lib/expense-store.js';
 
 const n = (v) => {
   const x = Number(v);
@@ -97,15 +98,17 @@ export async function onRequestGet({ request, env }) {
     const month = new URL(request.url).searchParams.get('month');
     if (!/^2026-(0[1-9]|1[0-2])$/.test(month || '')) return bad('조회 월은 2026년 1월~12월만 지원합니다.');
 
-    const data = await sheetsGet(env, [
-      '지출내역!A3:I5000',
-      '대출내역!A3:I500',
-      '월정산!A3:P500',
-      'SETTINGS!B9:B12',
+    const [expenses, data, lastSheetSync] = await Promise.all([
+      listExpenses(env),
+      sheetsGet(env, [
+        '대출내역!A3:I100',
+        '월정산!A3:P14',
+        'SETTINGS!B9:B12',
+      ]),
+      getLastSheetSync(env),
     ]);
 
-    const [expensesRange, loansRange, settlementsRange, settingsRange] = data.valueRanges || [];
-    const expenses = (expensesRange?.values || []).map((row, i) => normalizeExpense(row, i + 3)).filter((r) => /^2026-(0[1-9]|1[0-2])$/.test(r.month));
+    const [loansRange, settlementsRange, settingsRange] = data.valueRanges || [];
     const loans = (loansRange?.values || []).map(normalizeLoan).filter((r) => /^2026-(0[1-9]|1[0-2])$/.test(r.month));
 
     const laborFeeByMonth = new Map();
@@ -159,7 +162,9 @@ export async function onRequestGet({ request, env }) {
 
     return json({
       ok: true,
-      source: 'google-sheets',
+      source: 'd1+google-sheets',
+      expenseStorage: 'd1',
+      lastSheetSync,
       month,
       summary,
       comparison: { previousMonth: previousSummary ? prevMonth : null, previous: previousSummary },

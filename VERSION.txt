@@ -1,1 +1,1 @@
-kongmoney-v5.5.4-edit-recurring-checkbox-fix
+kongmoney-v5.6.0-expenses-d1-sheet-sync

@@ -1,9 +1,8 @@
 import { json, bad } from './_lib/http.js';
-import { sheetsGet, sheetsUpdate, sheetsClear } from './_lib/google.js';
-import { syncMonthlySettlement } from './_lib/settlement.js';
 import { normalizeMonthValue, is2026Month } from './_lib/year2026.js';
 import { assertMonthOpen } from './_lib/monthmeta.js';
 import { ensureAppTables } from './_lib/d1.js';
+import { insertExpense, updateExpense, deleteExpense, getExpenseById } from './_lib/expense-store.js';
 
 const SH_JH_ALIASES = new Set([
   '총무+구성원 A','총무+구성원 A 부담','총무 + 구성원 A','2인 공동',
@@ -86,26 +85,28 @@ export async function onRequestPost(context) {
     const saveAsRecurring = recurringRaw === true || recurringRaw === 'true' || recurringRaw === 1 || recurringRaw === '1' || recurringRaw === 'on' || recurringRaw === 'yes';
     const item = parseExpense(body);
     await assertMonthOpen(env, item.month);
-    const data = await sheetsGet(env, ['지출내역!A3:A5000']);
-    const rows = data.valueRanges?.[0]?.values || [];
 
-    let lastUsedOffset = -1;
-    for (let i = 0; i < rows.length; i += 1) if (String(rows[i]?.[0] ?? '').trim()) lastUsedOffset = i;
-    const targetRow = 3 + lastUsedOffset + 1;
-    await sheetsUpdate(env, `지출내역!A${targetRow}:I${targetRow}`, [[
-      item.month, item.category, item.subcategory, item.description, item.amount,
-      item.splitType, item.manager, item.memberA, item.memberB,
-    ]], 'RAW');
+    const saved = await insertExpense(env, item);
     let recurringTemplate = null;
-    if (saveAsRecurring) {
-      recurringTemplate = await saveRecurringFromExpense(env, item);
-    }
+    if (saveAsRecurring) recurringTemplate = await saveRecurringFromExpense(env, item);
 
-    context.waitUntil(syncMonthlySettlement(env).catch((err) => console.error('settlement background sync failed', err)));
-    return json({ ok: true, mode: 'inserted', sheetRow: targetRow, recurringSaved: Boolean(recurringTemplate), recurringTemplate, expense: {
-      sheetRow: targetRow, month: item.month, category: item.category, subcategory: item.subcategory,
-      description: item.description, amount: item.amount, splitType: item.splitType,
-    } }, 201);
+    return json({
+      ok: true,
+      storage: 'd1',
+      mode: 'inserted',
+      sheetRow: saved.sheetRow,
+      recurringSaved: Boolean(recurringTemplate),
+      recurringTemplate,
+      expense: {
+        sheetRow: saved.sheetRow,
+        month: saved.month,
+        category: saved.category,
+        subcategory: saved.subcategory,
+        description: saved.description,
+        amount: saved.amount,
+        splitType: saved.splitType,
+      },
+    }, 201);
   } catch (err) {
     return bad(err?.message || 'expense save error', err?.status || 400);
   }
@@ -117,31 +118,39 @@ export async function onRequestPut(context) {
     const body = await request.json();
     const recurringRaw = body.saveAsRecurring;
     const saveAsRecurring = recurringRaw === true || recurringRaw === 'true' || recurringRaw === 1 || recurringRaw === '1' || recurringRaw === 'on' || recurringRaw === 'yes';
-    const sheetRow = Number(body.sheetRow);
-    if (!Number.isInteger(sheetRow) || sheetRow < 3 || sheetRow > 5000) return bad('수정할 지출 행 정보가 올바르지 않습니다.');
-    const item = parseExpense(body);
-    const data = await sheetsGet(env, [`지출내역!A${sheetRow}:I${sheetRow}`]);
-    const current = data.valueRanges?.[0]?.values?.[0] || [];
-    const originalMonth = normalizeMonthValue(current?.[0]);
-    if (!is2026Month(originalMonth)) return bad('수정할 지출내역을 찾지 못했습니다.', 404);
-    await assertMonthOpen(env, originalMonth);
-    if (item.month !== originalMonth) await assertMonthOpen(env, item.month);
+    const id = Number(body.sheetRow);
+    if (!Number.isInteger(id) || id < 1) return bad('수정할 지출 정보가 올바르지 않습니다.');
 
-    await sheetsUpdate(env, `지출내역!A${sheetRow}:I${sheetRow}`, [[
-      item.month, item.category, item.subcategory, item.description, item.amount,
-      item.splitType, item.manager, item.memberA, item.memberB,
-    ]], 'RAW');
+    const current = await getExpenseById(env, id);
+    if (!current) return bad('수정할 지출내역을 찾지 못했습니다.', 404);
+    await assertMonthOpen(env, current.month);
+
+    const item = parseExpense(body);
+    if (item.month !== current.month) await assertMonthOpen(env, item.month);
+
+    const saved = await updateExpense(env, id, item);
+    if (!saved) return bad('수정할 지출내역을 찾지 못했습니다.', 404);
 
     let recurringTemplate = null;
-    if (saveAsRecurring) {
-      recurringTemplate = await saveRecurringFromExpense(env, item);
-    }
+    if (saveAsRecurring) recurringTemplate = await saveRecurringFromExpense(env, item);
 
-    context.waitUntil(syncMonthlySettlement(env).catch((err) => console.error('settlement background sync failed', err)));
-    return json({ ok: true, mode: 'updated', sheetRow, recurringSaved: Boolean(recurringTemplate), recurringTemplate, expense: {
-      sheetRow, month: item.month, category: item.category, subcategory: item.subcategory,
-      description: item.description, amount: item.amount, splitType: item.splitType,
-    } });
+    return json({
+      ok: true,
+      storage: 'd1',
+      mode: 'updated',
+      sheetRow: saved.sheetRow,
+      recurringSaved: Boolean(recurringTemplate),
+      recurringTemplate,
+      expense: {
+        sheetRow: saved.sheetRow,
+        month: saved.month,
+        category: saved.category,
+        subcategory: saved.subcategory,
+        description: saved.description,
+        amount: saved.amount,
+        splitType: saved.splitType,
+      },
+    });
   } catch (err) {
     return bad(err?.message || 'expense update error', err?.status || 400);
   }
@@ -151,16 +160,15 @@ export async function onRequestDelete(context) {
   const { request, env } = context;
   try {
     const body = await request.json().catch(() => ({}));
-    const sheetRow = Number(body.sheetRow);
-    if (!Number.isInteger(sheetRow) || sheetRow < 3 || sheetRow > 5000) return bad('삭제할 지출 행 정보가 올바르지 않습니다.');
-    const data = await sheetsGet(env, [`지출내역!A${sheetRow}:I${sheetRow}`]);
-    const current = data.valueRanges?.[0]?.values?.[0] || [];
-    const month = normalizeMonthValue(current?.[0]);
-    if (!is2026Month(month)) return bad('삭제할 지출내역을 찾지 못했습니다.', 404);
-    await assertMonthOpen(env, month);
-    await sheetsClear(env, `지출내역!A${sheetRow}:I${sheetRow}`);
-    context.waitUntil(syncMonthlySettlement(env).catch((err) => console.error('settlement background sync failed', err)));
-    return json({ ok: true, mode: 'deleted', sheetRow, month });
+    const id = Number(body.sheetRow);
+    if (!Number.isInteger(id) || id < 1) return bad('삭제할 지출 정보가 올바르지 않습니다.');
+
+    const current = await getExpenseById(env, id);
+    if (!current) return bad('삭제할 지출내역을 찾지 못했습니다.', 404);
+    await assertMonthOpen(env, current.month);
+
+    await deleteExpense(env, id);
+    return json({ ok: true, storage: 'd1', mode: 'deleted', sheetRow: id, month: current.month });
   } catch (err) {
     return bad(err?.message || 'expense delete error', err?.status || 500);
   }

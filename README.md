@@ -128,8 +128,18 @@ Cloudflare Pages + Google Sheets + GitHub 기반 공동 가계부입니다.
 
 - v5.5.4: 지출 수정 화면의 반복지출 체크 저장 지원. 수정 저장(PUT) 시 수정된 값을 D1 반복지출로 동시 저장하고 재조회 검증.
 
+## v5.6.0 patch
+- 지출내역 저장소를 Google Sheet 실시간 쓰기 방식에서 Cloudflare D1 우선 방식으로 전환.
+- 최초 1회 기존 `지출내역` 시트의 2026년 데이터를 D1 `expenses` 테이블로 자동 이관.
+- 지출 추가/수정/삭제는 D1에서 즉시 처리하여 Google Sheets API 왕복 제거.
+- 상단 조회 월 오른쪽 액션 영역에 작은 `시트 동기화` 버튼 추가.
+- `시트 동기화` 실행 시 D1 지출 전체를 Google Sheet `지출내역` 탭에 반영하고 월정산도 갱신.
+- 대출/월정산 설정값은 기존 Google Sheet 연동 유지.
+- `/api/d1-status`에 `expensesCount`, `lastSheetSync` 진단값 추가.
+
 ## 배포/커밋 내역
 <!-- AUTO_DEPLOY_HISTORY -->
+- 2026-09-30 02:20 KST — chore: kongmoney ZIP deploy 09-29-22:42 — 11개 파일 업로드
 - 2026-09-30 02:09 KST — chore: kongmoney ZIP deploy 09-29-22:42 — 29개 파일 업로드
 - 2026-09-30 00:14 KST — chore: kongmoney ZIP deploy 09-29-22:42 — 28개 파일 업로드
 - 2026-09-30 00:05 KST — chore: kongmoney ZIP deploy 09-29-22:42 — 27개 파일 업로드

@@ -425,3 +425,28 @@ button:disabled{opacity:.5;cursor:not-allowed;transform:none!important}
 }
 
 .build-version{position:fixed;right:10px;bottom:8px;font-size:10px;color:#b8aca2;opacity:.55;z-index:2;pointer-events:none}
+
+
+/* v5.6.0 - compact D1 -> Google Sheet sync control */
+.utility-row{grid-template-columns:minmax(0,1fr) 190px}
+.top-actions{width:190px;gap:5px}
+.top-action-buttons{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,.9fr);gap:6px;width:100%}
+.sheet-sync-btn,.refresh-btn{min-width:0;height:38px;border:0;border-radius:999px;font-family:inherit;font-weight:700;cursor:pointer;box-shadow:var(--shadow-soft);white-space:nowrap}
+.sheet-sync-btn{padding:8px 10px;font-size:11px;background:#edf8f3;color:#356a5d;border:1px solid #d4ecdf;box-shadow:none}
+.refresh-btn{width:auto;padding:8px 10px;font-size:11px}
+.sheet-sync-btn:hover,.refresh-btn:hover{transform:translateY(-1px)}
+.sheet-sync-btn:disabled,.refresh-btn:disabled{opacity:.58;cursor:wait;transform:none}
+.sheet-sync-btn.synced{background:#e3f5ec;color:#2f6758}
+@media(max-width:860px){
+  .utility-row{grid-template-columns:minmax(0,1fr) 170px}
+  .top-actions{width:170px}
+  .sheet-sync-btn,.refresh-btn{font-size:10px;padding:7px 6px}
+}
+@media(max-width:520px){
+  .utility-row{grid-template-columns:minmax(0,1fr) 132px;gap:8px}
+  .top-actions{width:132px}
+  .top-action-buttons{grid-template-columns:1fr 38px;gap:5px}
+  .sheet-sync-btn{font-size:9px;padding:6px 5px}
+  .refresh-btn{font-size:0;padding:0;width:38px}
+  .refresh-btn::before{content:'↻';font-size:16px}
+}
