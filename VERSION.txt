@@ -1,1 +1,1 @@
-kongmoney-v5.4.2-buildfix-recurring-meta
+kongmoney-v5.4.3-recurring-app-data-fix

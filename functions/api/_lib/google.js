@@ -164,3 +164,45 @@ export async function sheetsClear(env, range) {
   if (!res.ok) throw new Error(`Sheets clear error ${res.status}${await readError(res)}`);
   return res.json();
 }
+
+
+export async function sheetsGetMetadata(env) {
+  if (!env.GOOGLE_SHEET_ID) throw new Error('GOOGLE_SHEET_ID is not configured.');
+  const token = await getAccessToken(env);
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${env.GOOGLE_SHEET_ID}?fields=sheets.properties(sheetId,title,hidden,gridProperties)`;
+  const res = await fetch(url, { headers: { authorization: `Bearer ${token}` } });
+  if (!res.ok) throw new Error(`Sheets metadata error ${res.status}${await readError(res)}`);
+  return res.json();
+}
+
+export async function sheetsBatchUpdate(env, requests) {
+  if (!env.GOOGLE_SHEET_ID) throw new Error('GOOGLE_SHEET_ID is not configured.');
+  const token = await getAccessToken(env);
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${env.GOOGLE_SHEET_ID}:batchUpdate`;
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json' },
+    body: JSON.stringify({ requests }),
+  });
+  if (!res.ok) throw new Error(`Sheets batchUpdate error ${res.status}${await readError(res)}`);
+  return res.json();
+}
+
+export async function sheetsEnsureSheet(env, title, { hidden = true, rowCount = 100, columnCount = 8 } = {}) {
+  const meta = await sheetsGetMetadata(env);
+  const existing = (meta.sheets || []).find(s => s?.properties?.title === title);
+  if (existing?.properties) return existing.properties;
+
+  try {
+    const result = await sheetsBatchUpdate(env, [{
+      addSheet: { properties: { title, hidden, gridProperties: { rowCount, columnCount } } },
+    }]);
+    return result.replies?.[0]?.addSheet?.properties || { title };
+  } catch (err) {
+    // If two requests race to create the same sheet, re-read metadata and accept the winner.
+    const refreshed = await sheetsGetMetadata(env);
+    const created = (refreshed.sheets || []).find(s => s?.properties?.title === title);
+    if (created?.properties) return created.properties;
+    throw err;
+  }
+}

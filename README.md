@@ -100,8 +100,11 @@ Cloudflare Pages + Google Sheets + GitHub 기반 공동 가계부입니다.
 - 반복지출 `SETTINGS!C3:D3` JSON 저장방식 유지
 - 구형 월 메타 행 형식도 읽을 수 있도록 호환 처리
 
+- 2026-09-29 — v5.4.3 — 반복지출 저장을 SETTINGS 빈 셀에서 숨김 APP_DATA 시트로 이전, 레거시 데이터 자동 마이그레이션, 저장 후 재조회 검증 추가.
+
 ## 배포/커밋 내역
 <!-- AUTO_DEPLOY_HISTORY -->
+- 2026-09-29 23:50 KST — chore: kongmoney ZIP deploy 09-29-22:42 — 25개 파일 업로드
 - 2026-09-29 23:36 KST — chore: kongmoney ZIP deploy 09-29-22:42 — 25개 파일 업로드
 - 2026-09-29 23:29 KST — chore: kongmoney ZIP deploy 09-29-22:42 — 25개 파일 업로드
 - 2026-09-29 23:18 KST — chore: kongmoney ZIP deploy 09-29-22:42 — 25개 파일 업로드
