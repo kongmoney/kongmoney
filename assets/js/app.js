@@ -60,7 +60,7 @@ function expenseBadge(category){
   return { cls: 'other', icon: '₩' };
 }
 
-function render(){
+function renderDashboardFields(){
   const d=state.data || emptyDashboard(state.month); const s=d.summary || {}; const loan=d.loan || {};
   $('monthLabel').textContent=formatMonth(state.month);
   $('totalExpense').textContent=money(s.total);
@@ -79,6 +79,10 @@ function render(){
   $('loanInterest').textContent=money(loan.interest);
   $('loanTotal').textContent=money(loan.total);
   $('loanBalance').textContent=money(loan.balance);
+}
+
+function render(){
+  renderDashboardFields();
   renderExpenses();
 }
 
@@ -163,6 +167,14 @@ document.querySelectorAll('.chip').forEach(btn=>btn.addEventListener('click',()=
 const dlg=$('expenseDialog');
 const loanDlg=$('loanDialog');
 
+function enableBackdropClose(dialog){
+  if(!dialog) return;
+  dialog.addEventListener('click',(e)=>{
+    if(e.target === dialog) dialog.close();
+  });
+}
+document.querySelectorAll('dialog.dialog').forEach(enableBackdropClose);
+
 bindDigitsOnly($('expenseAmount'));
 document.querySelectorAll('.numeric-only').forEach(bindDigitsOnly);
 $('loanPrincipalInput').addEventListener('input',updateLoanPreview);
@@ -189,8 +201,27 @@ $('expenseForm').addEventListener('submit',async(e)=>{
     dlg.close();
     form.reset();
     showToast(`${formatMonth(row.month)} 지출을 Google Sheet에 저장했습니다.`);
+
+    // 전체 화면을 다시 불러오지 않고, 방금 저장한 내역만 즉시 목록에 반영합니다.
     state.month=row.month;
-    await load();
+    if(!state.data || state.data.month !== row.month) state.data=emptyDashboard(row.month);
+    if(!Array.isArray(state.data.expenses)) state.data.expenses=[];
+    state.data.expenses.push({
+      month: row.month,
+      category: row.category,
+      subcategory: row.subcategory,
+      description: row.description || '',
+      amount: row.amount,
+      splitType: row.splitType
+    });
+    $('monthLabel').textContent=formatMonth(state.month);
+    renderExpenses();
+
+    // 합계/정산값은 뒤에서 조용히 다시 계산해 갱신하되 지출목록은 다시 그리지 않습니다.
+    getDashboard(state.month).then((fresh)=>{
+      state.data=fresh;
+      renderDashboardFields();
+    }).catch(()=>{});
   }catch(err){
     showToast(err.message || '지출 저장에 실패했습니다.','error');
   }finally{

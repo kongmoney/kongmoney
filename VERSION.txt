@@ -1,1 +1,1 @@
-kongmoney-v5.2.2-expense-read-fix
+kongmoney-v5.2.3-ui-ux-fix

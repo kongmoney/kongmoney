@@ -54,8 +54,16 @@ Cloudflare Pages + Google Sheets + GitHub 기반 공동 가계부입니다.
 - `지출내역` 조회 범위를 A3:I2000 → A3:I5000으로 확장
 - 저장 시 빈 행 탐색 범위와 조회 범위를 동일하게 맞춤
 
+### v5.2.3 UI/UX 수정
+- 지출 저장 직후 전체 대시보드 재조회 대신 신규 지출 행만 즉시 목록 반영
+- 합계/정산값은 백그라운드에서 조용히 재계산
+- 메인 캐릭터의 겹쳐 보이던 기호 제거 및 단순 얼굴로 정리
+- 모바일 메인 히어로를 짧고 컴팩트한 2열 구조로 축소
+- 모든 메인 dialog 팝업에 바깥 영역 클릭 닫기 공통 적용
+
 ## 배포/커밋 내역
 <!-- AUTO_DEPLOY_HISTORY -->
+- 2026-09-29 21:22 KST — chore: kongmoney ZIP deploy 09-29-21:07 — 18개 파일 업로드
 - 2026-09-29 21:17 KST — chore: kongmoney ZIP deploy 09-29-21:07 — 18개 파일 업로드
 - 2026-09-29 21:13 KST — chore: kongmoney ZIP deploy 09-29-21:07 — 18개 파일 업로드
 - 2026-09-29 21:07 KST — chore: kongmoney ZIP deploy 09-29-21:07 — 18개 파일 업로드

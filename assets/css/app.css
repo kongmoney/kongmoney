@@ -246,3 +246,41 @@ button{appearance:none}
 .calculated-field span,.calculated-field small{display:block;color:var(--muted);font-size:12px}.calculated-field strong{display:block;margin:5px 0;font-size:22px;font-weight:800}
 @media(max-width:860px){.utility-row{grid-template-columns:minmax(0,1fr) 134px}.top-actions{width:134px}.month-bar{height:78px}}
 @media(max-width:520px){.utility-row{grid-template-columns:minmax(0,1fr) 108px;gap:8px}.top-actions{width:108px}.connection-status{display:block;font-size:9px;padding:4px 5px}.refresh-btn{font-size:11px;padding:9px 6px}.month-bar{height:74px;padding:10px 12px}.month-center strong{font-size:19px}.month-arrow{width:42px;height:42px}}
+
+/* v5.2.3 - compact mobile hero / mascot face cleanup */
+.mascot .face{font-size:0;pointer-events:none}
+.mascot .face::after{content:'';position:absolute;left:50%;top:58%;width:22px;height:10px;border-bottom:3px solid #333;border-radius:0 0 18px 18px;transform:translate(-50%,-50%)}
+
+@media(max-width:620px){
+  .hero{grid-template-columns:minmax(0,1fr) 118px;gap:12px;padding:18px 18px 16px;align-items:center;margin-bottom:12px}
+  .hero-copy{min-width:0}
+  .hero-kicker{font-size:12px;margin-bottom:5px}
+  .hero h1{font-size:38px;line-height:1;margin:0}
+  .hero-title-sub{font-size:14px;line-height:1.45;margin-top:8px}
+  .hero-title-sub br{display:none}
+  .hero-pills{margin-top:10px;gap:6px;flex-wrap:nowrap;overflow:hidden}
+  .hero-pills .pill{font-size:10px;padding:6px 8px;white-space:nowrap}
+  .hero-pills .pill:nth-child(3){display:none}
+  .hero-visual{min-height:100px;height:100px;order:initial;gap:5px;overflow:visible}
+  .hero-side{display:none}
+  .mascot{width:54px;height:62px;border-width:2px;border-radius:20px}
+  .mascot .ears::before,.mascot .ears::after{top:-13px;width:20px;height:27px;border-width:2px;border-bottom:0;border-radius:999px 999px 9px 9px}
+  .mascot .ears::before{left:7px}.mascot .ears::after{right:7px}
+  .mascot::before,.mascot::after{top:25px;width:5px;height:5px}
+  .mascot::before{left:18px}.mascot::after{right:18px}
+  .mascot .face::after{top:59%;width:10px;height:5px;border-bottom-width:2px}
+  .mascot-mint{transform:translateY(4px) rotate(-3deg)}
+  .mascot-pink{transform:translateY(-2px) rotate(4deg)}
+  .sticker{font-size:8px;padding:4px 6px;border-width:1px;border-radius:7px}
+  .sticker-one{left:-2px;top:2px}
+  .sticker-two{right:-2px;bottom:0}
+}
+
+@media(max-width:390px){
+  .hero{grid-template-columns:minmax(0,1fr) 96px;padding:16px 15px}
+  .hero h1{font-size:34px}
+  .hero-title-sub{font-size:13px}
+  .hero-visual{height:88px;min-height:88px}
+  .mascot{width:46px;height:54px}
+  .hero-pills .pill:nth-child(2){display:none}
+}
