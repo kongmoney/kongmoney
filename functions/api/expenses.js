@@ -54,7 +54,7 @@ export async function onRequestPost(context) {
   const { request, env } = context;
   try {
     const item = parseExpense(await request.json());
-    const data = await sheetsGet(env, ['지출내역!A3:A5000','SETTINGS!L3:N14']);
+    const data = await sheetsGet(env, ['지출내역!A3:A5000','SETTINGS!C4:D4']);
     const rows = data.valueRanges?.[0]?.values || [];
     const metaMap = parseMonthMetaRows(data.valueRanges?.[1]?.values || []);
     assertOpen(metaMap, item.month);
@@ -83,7 +83,7 @@ export async function onRequestPut(context) {
     const sheetRow = Number(body.sheetRow);
     if (!Number.isInteger(sheetRow) || sheetRow < 3 || sheetRow > 5000) return bad('수정할 지출 행 정보가 올바르지 않습니다.');
     const item = parseExpense(body);
-    const data = await sheetsGet(env, [`지출내역!A${sheetRow}:I${sheetRow}`,'SETTINGS!L3:N14']);
+    const data = await sheetsGet(env, [`지출내역!A${sheetRow}:I${sheetRow}`,'SETTINGS!C4:D4']);
     const current = data.valueRanges?.[0]?.values?.[0] || [];
     const originalMonth = normalizeMonthValue(current?.[0]);
     if (!is2026Month(originalMonth)) return bad('수정할 지출내역을 찾지 못했습니다.', 404);
@@ -111,7 +111,7 @@ export async function onRequestDelete(context) {
     const body = await request.json().catch(() => ({}));
     const sheetRow = Number(body.sheetRow);
     if (!Number.isInteger(sheetRow) || sheetRow < 3 || sheetRow > 5000) return bad('삭제할 지출 행 정보가 올바르지 않습니다.');
-    const data = await sheetsGet(env, [`지출내역!A${sheetRow}:I${sheetRow}`,'SETTINGS!L3:N14']);
+    const data = await sheetsGet(env, [`지출내역!A${sheetRow}:I${sheetRow}`,'SETTINGS!C4:D4']);
     const current = data.valueRanges?.[0]?.values?.[0] || [];
     const month = normalizeMonthValue(current?.[0]);
     if (!is2026Month(month)) return bad('삭제할 지출내역을 찾지 못했습니다.', 404);

@@ -102,7 +102,7 @@ export async function onRequestGet({ request, env }) {
       '대출내역!A3:I500',
       '월정산!A3:P500',
       'SETTINGS!B9:B12',
-      'SETTINGS!L3:N14',
+      'SETTINGS!C4:D4',
     ]);
 
     const [expensesRange, loansRange, settlementsRange, settingsRange, metaRange] = data.valueRanges || [];

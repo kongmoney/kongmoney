@@ -93,8 +93,16 @@ Cloudflare Pages + Google Sheets + GitHub 기반 공동 가계부입니다.
 - 엑셀→Google Sheets 변환 시 열 개수가 적어도 동작하도록 기존 A:D 범위 안에서만 저장
 - 반복지출 식별자를 sheetRow 대신 고유 ID로 변경
 
+
+## v5.4.2
+- Cloudflare Pages Functions build 오류 수정: `parseMonthMetaRows` export 복구
+- 월 메모/마감 조회 범위를 새 저장구조 `SETTINGS!C4:D4`로 통일
+- 반복지출 `SETTINGS!C3:D3` JSON 저장방식 유지
+- 구형 월 메타 행 형식도 읽을 수 있도록 호환 처리
+
 ## 배포/커밋 내역
 <!-- AUTO_DEPLOY_HISTORY -->
+- 2026-09-29 23:36 KST — chore: kongmoney ZIP deploy 09-29-22:42 — 25개 파일 업로드
 - 2026-09-29 23:29 KST — chore: kongmoney ZIP deploy 09-29-22:42 — 25개 파일 업로드
 - 2026-09-29 23:18 KST — chore: kongmoney ZIP deploy 09-29-22:42 — 25개 파일 업로드
 - 2026-09-29 23:05 KST — chore: kongmoney ZIP deploy 09-29-22:42 — 22개 파일 업로드

@@ -1,1 +1,1 @@
-kongmoney-v5.4.1-recurring-storage-fix
+kongmoney-v5.4.2-buildfix-recurring-meta
