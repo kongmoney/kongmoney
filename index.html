@@ -285,7 +285,7 @@
           <option value="SH + JH">SH + JH</option>
         </select>
       </label>
-      <label id="saveAsRecurringWrap" class="check-row"><input id="saveAsRecurring" type="checkbox" /> <span>이 지출을 반복지출로 저장</span></label>
+      <label id="saveAsRecurringWrap" class="check-row"><input id="saveAsRecurring" name="saveAsRecurring" type="checkbox" /> <span>이 지출을 반복지출로 저장</span></label>
       <button id="expenseSaveBtn" class="primary-btn full" type="submit" value="default">저장</button>
       <p class="helper-text">저장하면 Google Sheet의 지출내역 탭에 바로 반영됩니다.</p>
     </form>
@@ -367,6 +367,7 @@
   </dialog>
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
-  <script src="/assets/js/app.js" type="module"></script>
+  <div class="build-version" aria-label="버전">v5.5.4</div>
+  <script src="/assets/js/app-v5.5.4.js?v=553" type="module"></script>
 </body>
 </html>

@@ -3,6 +3,7 @@ import { sheetsGet, sheetsUpdate, sheetsClear } from './_lib/google.js';
 import { syncMonthlySettlement } from './_lib/settlement.js';
 import { normalizeMonthValue, is2026Month } from './_lib/year2026.js';
 import { assertMonthOpen } from './_lib/monthmeta.js';
+import { ensureAppTables } from './_lib/d1.js';
 
 const SH_JH_ALIASES = new Set([
   '총무+구성원 A','총무+구성원 A 부담','총무 + 구성원 A','2인 공동',
@@ -43,10 +44,47 @@ function parseExpense(body) {
 }
 
 
+async function saveRecurringFromExpense(env, item) {
+  const db = await ensureAppTables(env);
+  const count = await db.prepare('SELECT COUNT(*) AS c FROM recurring_expenses').first();
+  if (Number(count?.c || 0) >= 50) {
+    const err = new Error('반복지출은 최대 50개까지 저장할 수 있습니다.');
+    err.status = 409;
+    throw err;
+  }
+
+  const id = `rec-${crypto.randomUUID()}`;
+  const now = new Date().toISOString();
+  const result = await db.prepare(`INSERT INTO recurring_expenses
+    (id,name,category,subcategory,description,amount,split_type,created_at,updated_at)
+    VALUES (?,?,?,?,?,?,?,?,?)`)
+    .bind(id, item.subcategory, item.category, item.subcategory, item.description, Math.round(item.amount), item.splitType, now, now)
+    .run();
+
+  if (result?.success === false) throw new Error('반복지출 D1 저장에 실패했습니다.');
+
+  const saved = await db.prepare(`SELECT id,name,category,subcategory,description,amount,split_type
+    FROM recurring_expenses WHERE id=? LIMIT 1`).bind(id).first();
+  if (!saved) throw new Error('반복지출 D1 저장 후 재조회에 실패했습니다.');
+
+  return {
+    id: String(saved.id || ''),
+    name: String(saved.name || ''),
+    category: String(saved.category || ''),
+    subcategory: String(saved.subcategory || ''),
+    description: String(saved.description || ''),
+    amount: Number(saved.amount || 0),
+    splitType: String(saved.split_type || ''),
+  };
+}
+
 export async function onRequestPost(context) {
   const { request, env } = context;
   try {
-    const item = parseExpense(await request.json());
+    const body = await request.json();
+    const recurringRaw = body.saveAsRecurring;
+    const saveAsRecurring = recurringRaw === true || recurringRaw === 'true' || recurringRaw === 1 || recurringRaw === '1' || recurringRaw === 'on' || recurringRaw === 'yes';
+    const item = parseExpense(body);
     await assertMonthOpen(env, item.month);
     const data = await sheetsGet(env, ['지출내역!A3:A5000']);
     const rows = data.valueRanges?.[0]?.values || [];
@@ -58,8 +96,13 @@ export async function onRequestPost(context) {
       item.month, item.category, item.subcategory, item.description, item.amount,
       item.splitType, item.manager, item.memberA, item.memberB,
     ]], 'RAW');
+    let recurringTemplate = null;
+    if (saveAsRecurring) {
+      recurringTemplate = await saveRecurringFromExpense(env, item);
+    }
+
     context.waitUntil(syncMonthlySettlement(env).catch((err) => console.error('settlement background sync failed', err)));
-    return json({ ok: true, mode: 'inserted', sheetRow: targetRow, expense: {
+    return json({ ok: true, mode: 'inserted', sheetRow: targetRow, recurringSaved: Boolean(recurringTemplate), recurringTemplate, expense: {
       sheetRow: targetRow, month: item.month, category: item.category, subcategory: item.subcategory,
       description: item.description, amount: item.amount, splitType: item.splitType,
     } }, 201);
@@ -72,6 +115,8 @@ export async function onRequestPut(context) {
   const { request, env } = context;
   try {
     const body = await request.json();
+    const recurringRaw = body.saveAsRecurring;
+    const saveAsRecurring = recurringRaw === true || recurringRaw === 'true' || recurringRaw === 1 || recurringRaw === '1' || recurringRaw === 'on' || recurringRaw === 'yes';
     const sheetRow = Number(body.sheetRow);
     if (!Number.isInteger(sheetRow) || sheetRow < 3 || sheetRow > 5000) return bad('수정할 지출 행 정보가 올바르지 않습니다.');
     const item = parseExpense(body);
@@ -86,8 +131,14 @@ export async function onRequestPut(context) {
       item.month, item.category, item.subcategory, item.description, item.amount,
       item.splitType, item.manager, item.memberA, item.memberB,
     ]], 'RAW');
+
+    let recurringTemplate = null;
+    if (saveAsRecurring) {
+      recurringTemplate = await saveRecurringFromExpense(env, item);
+    }
+
     context.waitUntil(syncMonthlySettlement(env).catch((err) => console.error('settlement background sync failed', err)));
-    return json({ ok: true, mode: 'updated', sheetRow, expense: {
+    return json({ ok: true, mode: 'updated', sheetRow, recurringSaved: Boolean(recurringTemplate), recurringTemplate, expense: {
       sheetRow, month: item.month, category: item.category, subcategory: item.subcategory,
       description: item.description, amount: item.amount, splitType: item.splitType,
     } });

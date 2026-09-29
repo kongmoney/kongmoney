@@ -122,8 +122,15 @@ Cloudflare Pages + Google Sheets + GitHub 기반 공동 가계부입니다.
 
 - 2026-09-29 — v5.5.1 — D1 반복지출 저장 검증 강화, DDL 개별 실행, 저장 후 D1 재조회 확인, `/api/d1-status` 진단 엔드포인트 추가.
 
+- v5.5.2: 지출 추가의 ‘이 지출을 반복지출로 저장’ 체크 경로를 별도 2차 API 호출에서 지출 저장 API 내부의 D1 동시 저장 방식으로 변경. 저장 후 D1 재조회 검증 및 응답 반영.
+
+- v5.5.3: 반복지출 체크박스 저장 경로 캐시 문제 수정. 프론트 JS 파일명을 app-v5.5.3.js로 변경하여 강제 캐시 무효화, 서버는 checkbox 기본값 'on'도 반복지출 저장으로 인식.
+
+- v5.5.4: 지출 수정 화면의 반복지출 체크 저장 지원. 수정 저장(PUT) 시 수정된 값을 D1 반복지출로 동시 저장하고 재조회 검증.
+
 ## 배포/커밋 내역
 <!-- AUTO_DEPLOY_HISTORY -->
+- 2026-09-30 02:09 KST — chore: kongmoney ZIP deploy 09-29-22:42 — 29개 파일 업로드
 - 2026-09-30 00:14 KST — chore: kongmoney ZIP deploy 09-29-22:42 — 28개 파일 업로드
 - 2026-09-30 00:05 KST — chore: kongmoney ZIP deploy 09-29-22:42 — 27개 파일 업로드
 - 2026-09-29 23:50 KST — chore: kongmoney ZIP deploy 09-29-22:42 — 25개 파일 업로드

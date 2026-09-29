@@ -1,1 +1,1 @@
-kongmoney-v5.5.1-d1-verified-recurring
+kongmoney-v5.5.4-edit-recurring-checkbox-fix
