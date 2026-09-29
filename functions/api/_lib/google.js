@@ -119,3 +119,20 @@ export async function sheetsAppend(env, range, values) {
   if (!res.ok) throw new Error(`Sheets append error ${res.status}${await readError(res)}`);
   return res.json();
 }
+
+
+export async function sheetsUpdate(env, range, values) {
+  if (!env.GOOGLE_SHEET_ID) throw new Error('GOOGLE_SHEET_ID is not configured.');
+  const token = await getAccessToken(env);
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${env.GOOGLE_SHEET_ID}/values/${encodeURIComponent(range)}?valueInputOption=USER_ENTERED`;
+  const res = await fetch(url, {
+    method: 'PUT',
+    headers: {
+      authorization: `Bearer ${token}`,
+      'content-type': 'application/json',
+    },
+    body: JSON.stringify({ majorDimension: 'ROWS', values }),
+  });
+  if (!res.ok) throw new Error(`Sheets update error ${res.status}${await readError(res)}`);
+  return res.json();
+}

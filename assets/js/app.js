@@ -9,6 +9,17 @@ function formatMonth(ym){ const [y,m]=ym.split('-'); return `${y}년 ${Number(m)
 function shiftMonth(ym, delta){ const [y,m]=ym.split('-').map(Number); const d=new Date(y,m-1+delta,1); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`; }
 function emptyDashboard(month){ return {month,summary:{living:0,loan:0,total:0,managerFinal:0,memberAFinal:0,memberBFinal:0,carryIn:0,autoTransfer:0,carryOut:0},expenses:[],loan:{principal:0,interest:0,total:0,balance:0,rate:0}}; }
 function escapeHtml(v){return String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));}
+function digitsOnly(value){ return String(value ?? '').replace(/[^0-9]/g,''); }
+function bindDigitsOnly(input){
+  if(!input) return;
+  input.addEventListener('input',()=>{ input.value=digitsOnly(input.value); });
+  input.addEventListener('paste',()=>queueMicrotask(()=>{ input.value=digitsOnly(input.value); }));
+}
+function parseRateInput(v){
+  const x=Number(String(v??'').replace(/[^0-9.]/g,''));
+  return Number.isFinite(x) && x >= 0 ? x : 0;
+}
+
 
 function showToast(message, type='ok'){
   const toast=$('toast');
@@ -32,9 +43,15 @@ async function getDashboard(month){
 }
 
 function splitLabel(v){
-  const x=String(v||'');
-  if(['총무+구성원 A','총무+구성원 A 부담','총무 + 구성원 A','SH+JH','SH + JH','2인 공동'].includes(x)) return 'SH + JH';
-  return x;
+  const x=String(v||'').trim();
+  const aliases={
+    '총무+구성원 A':'SH + JH',
+    '총무+구성원 A 부담':'SH + JH',
+    '총무 + 구성원 A':'SH + JH',
+    '2인 공동':'SH + JH',
+    'SH+JH':'SH + JH',
+  };
+  return aliases[x] || x;
 }
 
 function expenseBadge(category){
@@ -90,6 +107,30 @@ function renderExpenses(){
   }
 }
 
+async function saveLoan(payload){
+  const res=await fetch('/api/loan',{method:'PUT',headers:{'content-type':'application/json'},body:JSON.stringify(payload)});
+  const body=await res.json().catch(()=>({}));
+  if(!res.ok || body.ok===false) throw new Error(body.error || `대출내역 저장 실패 (${res.status})`);
+  return body;
+}
+
+function updateLoanPreview(){
+  const principal=Number(digitsOnly($('loanPrincipalInput')?.value)||0);
+  const interest=Number(digitsOnly($('loanInterestInput')?.value)||0);
+  $('loanTotalPreview').textContent=money(principal+interest);
+}
+
+function openLoanDialog(){
+  const loan=state.data?.loan||{};
+  $('loanEditMonth').textContent=formatMonth(state.month);
+  $('loanPrincipalInput').value=String(Math.round(Number(loan.principal||0)));
+  $('loanInterestInput').value=String(Math.round(Number(loan.interest||0)));
+  $('loanRateInput').value=loan.rate ? String(Number(loan.rate) <= 1 ? Number(loan.rate)*100 : Number(loan.rate)) : '';
+  $('loanBalanceInput').value=String(Math.round(Number(loan.balance||0)));
+  updateLoanPreview();
+  $('loanDialog').showModal();
+}
+
 async function load(){
   if(state.loading) return;
   state.loading=true;
@@ -120,13 +161,26 @@ document.querySelectorAll('.chip').forEach(btn=>btn.addEventListener('click',()=
 }));
 
 const dlg=$('expenseDialog');
+const loanDlg=$('loanDialog');
+
+bindDigitsOnly($('expenseAmount'));
+document.querySelectorAll('.numeric-only').forEach(bindDigitsOnly);
+$('loanPrincipalInput').addEventListener('input',updateLoanPreview);
+$('loanInterestInput').addEventListener('input',updateLoanPreview);
+
 $('addExpenseBtn').addEventListener('click',()=>{ $('expenseMonth').value=state.month; dlg.showModal(); });
+$('closeExpenseDialog').addEventListener('click',()=>dlg.close());
+$('closeLoanDialog').addEventListener('click',()=>loanDlg.close());
+document.querySelectorAll('[data-loan-edit]').forEach(btn=>btn.addEventListener('click',openLoanDialog));
+
 $('expenseForm').addEventListener('submit',async(e)=>{
-  const submitter=e.submitter; if(submitter?.value==='cancel') return;
   e.preventDefault();
   const form=e.currentTarget;
+  if(!form.reportValidity()) return;
   const saveBtn=form.querySelector('button[type="submit"][value="default"]');
-  const fd=new FormData(form); const row=Object.fromEntries(fd.entries()); row.amount=Number(row.amount||0);
+  const fd=new FormData(form); const row=Object.fromEntries(fd.entries());
+  row.amount=Number(digitsOnly(row.amount)||0);
+  if(row.amount <= 0){ showToast('금액을 1원 이상 입력해주세요.','error'); return; }
   saveBtn.disabled=true; saveBtn.textContent='저장 중…';
   try{
     const res=await fetch('/api/expenses',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(row)});
@@ -141,6 +195,28 @@ $('expenseForm').addEventListener('submit',async(e)=>{
     showToast(err.message || '지출 저장에 실패했습니다.','error');
   }finally{
     saveBtn.disabled=false; saveBtn.textContent='저장';
+  }
+});
+
+$('loanForm').addEventListener('submit',async(e)=>{
+  e.preventDefault();
+  const form=e.currentTarget;
+  if(!form.reportValidity()) return;
+  const saveBtn=$('loanSaveBtn');
+  const principal=Number(digitsOnly($('loanPrincipalInput').value)||0);
+  const interest=Number(digitsOnly($('loanInterestInput').value)||0);
+  const balance=Number(digitsOnly($('loanBalanceInput').value)||0);
+  const ratePercent=parseRateInput($('loanRateInput').value);
+  saveBtn.disabled=true; saveBtn.textContent='저장 중…';
+  try{
+    await saveLoan({month:state.month,principal,interest,rate:ratePercent/100,balance});
+    loanDlg.close();
+    showToast('대출내역을 Google Sheet에 반영했습니다.');
+    await load();
+  }catch(err){
+    showToast(err.message || '대출내역 저장에 실패했습니다.','error');
+  }finally{
+    saveBtn.disabled=false; saveBtn.textContent='Google Sheet에 저장';
   }
 });
 

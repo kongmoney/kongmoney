@@ -229,3 +229,20 @@ button{appearance:none}
   .section-heading .primary-btn{width:100%}
   .loan-grid{grid-template-columns:1fr}
 }
+
+
+/* v5.2 layout stability / editable loan */
+.utility-row{display:grid;grid-template-columns:minmax(0,1fr) 152px;align-items:stretch;gap:14px}
+.month-bar{width:100%;height:82px;margin:0}
+.top-actions{width:152px;display:flex;flex-direction:column;align-items:stretch;justify-content:center;gap:7px}
+.connection-status{display:block;width:100%;min-height:25px;padding:5px 8px;font-size:10px;line-height:1.2;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;box-shadow:none}
+.refresh-btn{width:100%;padding:10px 12px;font-size:13px}
+.loan-edit-hint{margin-top:10px;color:var(--muted);font-size:12px;font-weight:600}
+.loan-grid>button.loan-value-card{font:inherit;text-align:left;color:inherit;cursor:pointer;padding:16px;border:1px solid var(--line);border-radius:20px;background:#fff;transition:.16s ease}
+.loan-grid>button.loan-value-card:hover{transform:translateY(-2px);border-color:#d8c9bb;box-shadow:var(--shadow-soft)}
+.loan-grid>button.loan-value-card:focus-visible{outline:3px solid rgba(168,213,194,.55);outline-offset:2px}
+.dialog-subtitle{margin:5px 0 0;color:var(--muted);font-size:13px}
+.calculated-field{margin-top:16px;padding:14px 16px;border-radius:18px;background:#eff9f5;border:1px solid #d9ebdf}
+.calculated-field span,.calculated-field small{display:block;color:var(--muted);font-size:12px}.calculated-field strong{display:block;margin:5px 0;font-size:22px;font-weight:800}
+@media(max-width:860px){.utility-row{grid-template-columns:minmax(0,1fr) 134px}.top-actions{width:134px}.month-bar{height:78px}}
+@media(max-width:520px){.utility-row{grid-template-columns:minmax(0,1fr) 108px;gap:8px}.top-actions{width:108px}.connection-status{display:block;font-size:9px;padding:4px 5px}.refresh-btn{font-size:11px;padding:9px 6px}.month-bar{height:74px;padding:10px 12px}.month-center strong{font-size:19px}.month-arrow{width:42px;height:42px}}

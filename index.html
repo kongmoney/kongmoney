@@ -51,7 +51,7 @@
           <span class="icon-circle yellow">↺</span>
           <div>
             <strong>CE 자동이체도 반영돼요</strong>
-            <p>40만원 자동이체와 남은 차액을 다음 달까지 이어서 봐요.</p>
+            <p>월별 자동이체와 남은 차액을 다음 달까지 이어서 봐요.</p>
           </div>
         </div>
       </div>
@@ -122,11 +122,12 @@
                 <h2>대출 현황</h2>
               </div>
             </div>
-            <div class="loan-grid">
-              <div><span>상환 원금</span><strong id="loanPrincipal">-</strong></div>
-              <div><span>납부 이자</span><strong id="loanInterest">-</strong></div>
-              <div><span>월 상환액</span><strong id="loanTotal">-</strong></div>
-              <div><span>상환 후 잔액</span><strong id="loanBalance">-</strong></div>
+            <div class="loan-edit-hint">각 금액을 눌러 수정할 수 있어요 ✎</div>
+            <div class="loan-grid" id="loanGrid">
+              <button class="loan-value-card" type="button" data-loan-edit><span>상환 원금</span><strong id="loanPrincipal">-</strong></button>
+              <button class="loan-value-card" type="button" data-loan-edit><span>납부 이자</span><strong id="loanInterest">-</strong></button>
+              <button class="loan-value-card" type="button" data-loan-edit><span>월 상환액</span><strong id="loanTotal">-</strong></button>
+              <button class="loan-value-card" type="button" data-loan-edit><span>상환 후 잔액</span><strong id="loanBalance">-</strong></button>
             </div>
           </section>
 
@@ -158,7 +159,7 @@
           <div class="section-heading compact-heading">
             <div>
               <span class="section-kicker">CE</span>
-              <h2>40만원 자동이체 · 이월</h2>
+              <h2>자동이체 · 이월</h2>
             </div>
             <span class="badge">매월 자동</span>
           </div>
@@ -196,7 +197,7 @@
           <div class="guide-steps">
             <div class="guide-step"><span class="step-badge mint">1</span><p>지출 내역에 생활비나 기타 비용을 추가해요.</p></div>
             <div class="guide-step"><span class="step-badge pink">2</span><p>분담방식에 따라 각자 금액이 자동으로 계산돼요.</p></div>
-            <div class="guide-step"><span class="step-badge yellow">3</span><p>CE의 40만원 자동이체와 남은 차액은 다음 달에 반영돼요.</p></div>
+            <div class="guide-step"><span class="step-badge yellow">3</span><p>CE 자동이체와 남은 차액은 다음 달에 반영돼요.</p></div>
           </div>
         </section>
 
@@ -209,7 +210,7 @@
           </div>
           <ul class="spec-list">
             <li><span>구성원 수</span><strong>JH · SH · CE</strong></li>
-            <li><span>CE 자동이체</span><strong>매월 400,000원</strong></li>
+            <li><span>CE 자동이체</span><strong>25.01~02 30만원 · 이후 40만원</strong></li>
             <li><span>데이터 원본</span><strong>Google Sheet</strong></li>
             <li><span>배포 환경</span><strong>Cloudflare Pages</strong></li>
           </ul>
@@ -225,7 +226,7 @@
           <span class="section-kicker">NEW EXPENSE</span>
           <h2>지출 추가</h2>
         </div>
-        <button class="close-btn" value="cancel" type="submit" aria-label="닫기">×</button>
+        <button id="closeExpenseDialog" class="close-btn" type="button" aria-label="닫기">×</button>
       </div>
       <label>월<input id="expenseMonth" name="month" type="month" required /></label>
       <label>대분류
@@ -236,15 +237,37 @@
       </label>
       <label>소분류<input name="subcategory" type="text" placeholder="예: 관리비" required /></label>
       <label>내역/비고<input name="description" type="text" placeholder="예: 아파트 관리비" /></label>
-      <label>금액<input name="amount" type="number" inputmode="numeric" min="0" step="1" required /></label>
+      <label>금액<input id="expenseAmount" name="amount" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="off" placeholder="숫자만 입력" required /></label>
       <label>분담방식
         <select name="splitType" required>
           <option value="3인 공동">3인 공동</option>
-          <option value="총무+구성원 A">SH + JH</option>
+          <option value="JH + SH">JH + SH</option>
+          <option value="JH + CE">JH + CE</option>
+          <option value="SH + JH">SH + JH</option>
         </select>
       </label>
       <button class="primary-btn full" type="submit" value="default">저장</button>
       <p class="helper-text">저장하면 Google Sheet의 지출내역 탭에 바로 반영됩니다.</p>
+    </form>
+  </dialog>
+
+  <dialog id="loanDialog" class="dialog">
+    <form id="loanForm" class="dialog-card">
+      <div class="dialog-header">
+        <div>
+          <span class="section-kicker">LOAN EDIT</span>
+          <h2>대출 내역 수정</h2>
+          <p id="loanEditMonth" class="dialog-subtitle"></p>
+        </div>
+        <button id="closeLoanDialog" class="close-btn" type="button" aria-label="닫기">×</button>
+      </div>
+      <label>상환 원금<input id="loanPrincipalInput" name="principal" class="numeric-only" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="off" required /></label>
+      <label>납부 이자<input id="loanInterestInput" name="interest" class="numeric-only" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="off" required /></label>
+      <label>적용 금리 (%)<input id="loanRateInput" name="rate" type="text" inputmode="decimal" autocomplete="off" placeholder="예: 3.8" /></label>
+      <label>상환 후 잔액<input id="loanBalanceInput" name="balance" class="numeric-only" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="off" required /></label>
+      <div class="calculated-field"><span>월 상환액</span><strong id="loanTotalPreview">0원</strong><small>상환 원금 + 납부 이자로 자동 계산</small></div>
+      <button id="loanSaveBtn" class="primary-btn full" type="submit">Google Sheet에 저장</button>
+      <p class="helper-text">현재 조회 월의 대출내역 행을 수정합니다. 행이 없으면 새로 추가합니다.</p>
     </form>
   </dialog>
 

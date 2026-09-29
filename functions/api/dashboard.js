@@ -19,6 +19,9 @@ function normalizeExpense(row) {
   if (!manager && !memberA && !memberB && amount) {
     if (splitType === '3인 공동') {
       manager = memberA = memberB = amount / 3;
+    } else if (['JH + CE','JH+CE'].includes(splitType)) {
+      manager = 0;
+      memberA = memberB = amount / 2;
     } else {
       manager = memberA = amount / 2;
       memberB = 0;
@@ -62,6 +65,12 @@ function monthRange(start, end) {
   return result;
 }
 
+function autoTransferForMonth(ym, configured) {
+  if (ym === '2025-01' || ym === '2025-02') return 300000;
+  if (ym >= '2025-03') return 400000;
+  return configured || 400000;
+}
+
 export async function onRequestGet({ request, env }) {
   try {
     const month = new URL(request.url).searchParams.get('month');
@@ -85,7 +94,7 @@ export async function onRequestGet({ request, env }) {
 
     const settingsRows = settingsRange?.values || [];
     const defaultLaborFee = n(settingsRows?.[0]?.[0]) || 200000;
-    const autoTransfer = n(settingsRows?.[3]?.[0]) || 400000;
+    const configuredAutoTransfer = n(settingsRows?.[3]?.[0]) || 400000;
 
     const expenseMonths = expenses.map((r) => r.month);
     const loanMonths = loans.map((r) => r.month);
@@ -116,7 +125,7 @@ export async function onRequestGet({ request, env }) {
       const memberAFinal = active ? memberABasic + laborFee : 0;
       const memberBFinal = active ? memberBBasic + laborFee : 0;
       const carryIn = carry;
-      const transferApplied = active ? autoTransfer : 0;
+      const transferApplied = active ? autoTransferForMonth(ym, configuredAutoTransfer) : 0;
       const carryOut = active ? carryIn + transferApplied - memberBFinal : carryIn;
 
       if (active) carry = carryOut;
