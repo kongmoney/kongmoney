@@ -94,7 +94,7 @@ export async function onRequestGet({ request, env }) {
     const data = await sheetsGet(env, [
       '지출내역!A3:I5000',
       '대출내역!A3:I500',
-      '월정산!A3:H200',
+      '월정산!A3:P500',
       'SETTINGS!B9:B12',
     ]);
 

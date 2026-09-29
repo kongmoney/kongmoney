@@ -1,5 +1,6 @@
 import { json, bad } from './_lib/http.js';
 import { sheetsGet, sheetsUpdate, sheetsAppend } from './_lib/google.js';
+import { syncMonthlySettlement } from './_lib/settlement.js';
 
 const n = (v) => {
   const x = Number(v);
@@ -39,12 +40,14 @@ export async function onRequestPut({ request, env }) {
       await sheetsUpdate(env, `대출내역!B${sheetRow}:H${sheetRow}`, [[
         principal, interest, rate, balance, total, total / 2, total / 2,
       ]]);
+      await syncMonthlySettlement(env);
       return json({ ok: true, mode: 'updated', month, principal, interest, rate, balance, total });
     }
 
     await sheetsAppend(env, '대출내역!A:I', [[
       month, principal, interest, rate, balance, total, total / 2, total / 2, '',
     ]], 'RAW');
+    await syncMonthlySettlement(env);
     return json({ ok: true, mode: 'inserted', month, principal, interest, rate, balance, total }, 201);
   } catch (err) {
     return bad(err?.message || 'loan update error', 500);

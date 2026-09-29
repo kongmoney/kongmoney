@@ -67,8 +67,11 @@ Cloudflare Pages + Google Sheets + GitHub 기반 공동 가계부입니다.
 
 - 2026-09-29 — v5.2.6 — 지출 카드 삭제 버튼 추가, 삭제 시 Google Sheet 지출내역 A:I 동시 삭제(값 비우기), 삭제 후 월 합계/정산 즉시 재조회
 
+- 2026-09-29 — v5.2.7 — 지출 추가/삭제·대출 수정 시 월정산 A:P 자동 재계산/저장. CE 자동이체는 2025-01/02 300,000원, 2025-03 이후 400,000원으로 시트까지 동기화.
+
 ## 배포/커밋 내역
 <!-- AUTO_DEPLOY_HISTORY -->
+- 2026-09-29 21:39 KST — chore: kongmoney ZIP deploy 09-29-21:07 — 19개 파일 업로드
 - 2026-09-29 21:35 KST — chore: kongmoney ZIP deploy 09-29-21:07 — 18개 파일 업로드
 - 2026-09-29 21:31 KST — chore: kongmoney ZIP deploy 09-29-21:07 — 18개 파일 업로드
 - 2026-09-29 21:26 KST — chore: kongmoney ZIP deploy 09-29-21:07 — 18개 파일 업로드

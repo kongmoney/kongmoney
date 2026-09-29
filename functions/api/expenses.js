@@ -1,5 +1,6 @@
 import { json, bad } from './_lib/http.js';
 import { sheetsGet, sheetsUpdate, sheetsClear } from './_lib/google.js';
+import { syncMonthlySettlement } from './_lib/settlement.js';
 
 const SH_JH_ALIASES = new Set([
   '총무+구성원 A','총무+구성원 A 부담','총무 + 구성원 A','2인 공동',
@@ -78,6 +79,8 @@ export async function onRequestPost({ request, env }) {
       split.memberB,
     ]], 'RAW');
 
+    await syncMonthlySettlement(env);
+
     return json({
       ok: true,
       mode: 'inserted',
@@ -103,6 +106,7 @@ export async function onRequestDelete({ request, env }) {
 
     // 지출 데이터 열(A:I)만 비워 시트의 다른 서식/구조는 유지한다.
     await sheetsClear(env, `지출내역!A${sheetRow}:I${sheetRow}`);
+    await syncMonthlySettlement(env);
     return json({ ok: true, mode: 'deleted', sheetRow });
   } catch (err) {
     return bad(err?.message || 'expense delete error', 500);
