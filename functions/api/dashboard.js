@@ -3,13 +3,14 @@ import { getMonthMeta } from './_lib/monthmeta.js';
 import { listExpenses, getLastSheetSync } from './_lib/expense-store.js';
 import { getLoan } from './_lib/loan-store.js';
 import { getMonthlySummary, getPreviousMonthlySummary } from './_lib/summary-store.js';
+import { isSupportedMonth } from './_lib/year.js';
 
-const validMonth = (m) => /^2026-(0[1-9]|1[0-2])$/.test(m || '');
+const validMonth = (m) => isSupportedMonth(m);
 
 export async function onRequestGet({ request, env }) {
   try {
     const month = new URL(request.url).searchParams.get('month');
-    if (!validMonth(month)) return bad('조회 월은 2026년 1월~12월만 지원합니다.');
+    if (!validMonth(month)) return bad('조회 월은 2025년 또는 2026년만 지원합니다.');
 
     const [expenses, loan, summary, previousSummary, meta, lastSheetSync] = await Promise.all([
       listExpenses(env, { month }),

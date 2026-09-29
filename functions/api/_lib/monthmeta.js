@@ -1,5 +1,5 @@
 import { ensureAppTables } from './d1.js';
-import { normalizeMonthValue, is2026Month } from './year2026.js';
+import { normalizeMonthValue, isSupportedMonth } from './year.js';
 
 const STORAGE_KEY = 'APP_MONTH_META';
 
@@ -21,7 +21,7 @@ export function parseMonthMetaRows(rows = []) {
       if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
         for (const [key, value] of Object.entries(parsed)) {
           const month = normalizeMonthValue(key);
-          if (!is2026Month(month)) continue;
+          if (!isSupportedMonth(month)) continue;
           map.set(month, { month, memo: String(value?.memo ?? ''), closed: Boolean(value?.closed) });
         }
       }
@@ -30,7 +30,7 @@ export function parseMonthMetaRows(rows = []) {
   }
   for (const row of rows) {
     const month = normalizeMonthValue(row?.[0]);
-    if (!is2026Month(month)) continue;
+    if (!isSupportedMonth(month)) continue;
     map.set(month, { month, memo: String(row?.[1] ?? ''), closed: parseClosed(row?.[2]) });
   }
   return map;
@@ -38,7 +38,7 @@ export function parseMonthMetaRows(rows = []) {
 
 export async function getMonthMeta(env, month) {
   const ym = normalizeMonthValue(month);
-  if (!is2026Month(ym)) return { month: ym, memo: '', closed: false };
+  if (!isSupportedMonth(ym)) return { month: ym, memo: '', closed: false };
   const db = await ensureAppTables(env);
   const row = await db.prepare('SELECT month,memo,closed FROM month_meta WHERE month = ?').bind(ym).first();
   return { month: ym, memo: String(row?.memo ?? ''), closed: Boolean(row?.closed) };
@@ -46,7 +46,7 @@ export async function getMonthMeta(env, month) {
 
 export async function writeMonthMeta(env, month, meta) {
   const ym = normalizeMonthValue(month);
-  if (!is2026Month(ym)) throw new Error('2026년 월만 저장할 수 있습니다.');
+  if (!isSupportedMonth(ym)) throw new Error('2025년 또는 2026년 월만 저장할 수 있습니다.');
   const db = await ensureAppTables(env);
   const now = new Date().toISOString();
   await db.prepare(`INSERT INTO month_meta (month,memo,closed,updated_at)

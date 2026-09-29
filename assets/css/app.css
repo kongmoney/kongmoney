@@ -450,3 +450,10 @@ button:disabled{opacity:.5;cursor:not-allowed;transform:none!important}
   .refresh-btn{font-size:0;padding:0;width:38px}
   .refresh-btn::before{content:'↻';font-size:16px}
 }
+
+/* v5.9.0 - multi-year picker */
+.year-picker-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;padding-bottom:10px;border-bottom:1px dashed var(--line-strong)}
+.year-picker-row button{border:1px solid var(--line-strong);background:#fff;border-radius:14px;padding:9px 8px;font:inherit;font-size:13px;font-weight:800;color:#6b625c;cursor:pointer}
+.year-picker-row button:hover{background:#eff9f5;transform:translateY(-1px)}
+.year-picker-row button.active{background:#dff2ea;color:#315f51;border-color:#b9ddcf;box-shadow:inset 0 0 0 1px rgba(84,137,117,.08)}
+@media(max-width:520px){.year-picker-row{gap:6px;margin-bottom:8px;padding-bottom:8px}.year-picker-row button{font-size:12px;padding:8px 6px;border-radius:12px}}

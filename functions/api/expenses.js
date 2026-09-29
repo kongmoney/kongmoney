@@ -1,5 +1,5 @@
 import { json, bad } from './_lib/http.js';
-import { normalizeMonthValue, is2026Month } from './_lib/year2026.js';
+import { normalizeMonthValue, isSupportedMonth } from './_lib/year.js';
 import { assertMonthOpen } from './_lib/monthmeta.js';
 import { ensureAppTables } from './_lib/d1.js';
 import { insertExpense, updateExpense, deleteExpense, getExpenseById } from './_lib/expense-store.js';
@@ -34,7 +34,7 @@ function parseExpense(body) {
   const description = String(body.description || '').trim();
   const amount = Number(String(body.amount ?? '').replace(/[^0-9]/g, ''));
   const rawSplitType = String(body.splitType || '').trim();
-  if (!is2026Month(month)) throw new Error('지출내역은 2026년 1월~12월만 관리합니다.');
+  if (!isSupportedMonth(month)) throw new Error('지출내역은 2025년 또는 2026년만 관리합니다.');
   if (!category) throw new Error('대분류를 선택해주세요.');
   if (!subcategory) throw new Error('소분류를 입력해주세요.');
   if (!Number.isFinite(amount) || amount <= 0) throw new Error('금액을 1원 이상 입력해주세요.');

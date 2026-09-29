@@ -65,21 +65,25 @@
           <strong id="monthLabel">2026년 9월</strong>
           <span class="month-jump-hint">월 바로가기</span>
         </button>
-        <div id="monthPicker" class="month-picker" hidden aria-label="월 바로가기">
-          <div class="month-picker-title">2026년 월 바로가기</div>
+        <div id="monthPicker" class="month-picker" hidden aria-label="연도 및 월 바로가기">
+          <div class="year-picker-row" aria-label="조회 연도">
+            <button type="button" data-year-jump="2025">2025</button>
+            <button type="button" data-year-jump="2026">2026</button>
+          </div>
+          <div id="monthPickerTitle" class="month-picker-title">2026년 월 바로가기</div>
           <div class="month-picker-grid">
-            <button type="button" data-month-jump="2026-01">1월</button>
-            <button type="button" data-month-jump="2026-02">2월</button>
-            <button type="button" data-month-jump="2026-03">3월</button>
-            <button type="button" data-month-jump="2026-04">4월</button>
-            <button type="button" data-month-jump="2026-05">5월</button>
-            <button type="button" data-month-jump="2026-06">6월</button>
-            <button type="button" data-month-jump="2026-07">7월</button>
-            <button type="button" data-month-jump="2026-08">8월</button>
-            <button type="button" data-month-jump="2026-09">9월</button>
-            <button type="button" data-month-jump="2026-10">10월</button>
-            <button type="button" data-month-jump="2026-11">11월</button>
-            <button type="button" data-month-jump="2026-12">12월</button>
+            <button type="button" data-month-number="1">1월</button>
+            <button type="button" data-month-number="2">2월</button>
+            <button type="button" data-month-number="3">3월</button>
+            <button type="button" data-month-number="4">4월</button>
+            <button type="button" data-month-number="5">5월</button>
+            <button type="button" data-month-number="6">6월</button>
+            <button type="button" data-month-number="7">7월</button>
+            <button type="button" data-month-number="8">8월</button>
+            <button type="button" data-month-number="9">9월</button>
+            <button type="button" data-month-number="10">10월</button>
+            <button type="button" data-month-number="11">11월</button>
+            <button type="button" data-month-number="12">12월</button>
           </div>
         </div>
         <button id="nextMonth" class="month-arrow" type="button" aria-label="다음 달">›</button>
@@ -370,7 +374,7 @@
   </dialog>
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
-  <div class="build-version" aria-label="버전">v5.6.0</div>
-  <script src="/assets/js/app-v5.7.0.js?v=570" type="module"></script>
+  <div class="build-version" aria-label="버전">v5.9.0</div>
+  <script src="/assets/js/app-v5.9.0.js?v=590" type="module"></script>
 </body>
 </html>

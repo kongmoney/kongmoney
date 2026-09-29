@@ -2,18 +2,19 @@ import { json, bad } from './_lib/http.js';
 import { assertMonthOpen } from './_lib/monthmeta.js';
 import { getLoan, getPreviousLoan, upsertLoan } from './_lib/loan-store.js';
 import { recalculateMonthlySummaryFrom } from './_lib/summary-store.js';
+import { isSupportedMonth } from './_lib/year.js';
 
 const n = (v) => {
   const x = Number(v);
   return Number.isFinite(x) ? x : 0;
 };
-const validMonth = (m) => /^2026-(0[1-9]|1[0-2])$/.test(m || '');
+const validMonth = (m) => isSupportedMonth(m);
 
 export async function onRequestPut({ request, env }) {
   try {
     const body = await request.json();
     const month = String(body.month || '').trim();
-    if (!validMonth(month)) return bad('대출내역은 2026년 1월~12월만 관리합니다.');
+    if (!validMonth(month)) return bad('대출내역은 2025년 또는 2026년만 관리합니다.');
     await assertMonthOpen(env, month);
 
     const principal = n(body.principal);
@@ -46,7 +47,7 @@ export async function onRequestDelete({ request, env }) {
   try {
     const body = await request.json().catch(() => ({}));
     const month = String(body.month || '').trim();
-    if (!validMonth(month)) return bad('대출내역은 2026년 1월~12월만 관리합니다.');
+    if (!validMonth(month)) return bad('대출내역은 2025년 또는 2026년만 관리합니다.');
     await assertMonthOpen(env, month);
 
     const current = await getLoan(env, month);

@@ -2,7 +2,7 @@ import { ensureAppTables } from './d1.js';
 import { listExpenses } from './expense-store.js';
 import { listLoans } from './loan-store.js';
 import { sheetsGet } from './google.js';
-import { months2026, normalizeMonthValue } from './year2026.js';
+import { isSupportedMonth, isSupportedYear, monthsForYear, normalizeMonthValue, previousMonthSameYear, yearOfMonth } from './year.js';
 
 const n = (v) => {
   const x = Number(v);
@@ -10,13 +10,8 @@ const n = (v) => {
 };
 
 function autoTransferForMonth(ym) {
-  return ym === '2026-01' || ym === '2026-02' ? 300000 : 400000;
-}
-
-function previousMonth(ym) {
-  const [y, m] = ym.split('-').map(Number);
-  if (m === 1) return `${y - 1}-12`;
-  return `${y}-${String(m - 1).padStart(2, '0')}`;
+  if (ym === '2026-01' || ym === '2026-02') return 300000;
+  return 400000;
 }
 
 function mapSummary(row) {
@@ -45,20 +40,24 @@ function mapSummary(row) {
 }
 
 async function readLaborConfig(env) {
-  const data = await sheetsGet(env, ['월정산!A3:H14', 'SETTINGS!B9:B9']);
+  const data = await sheetsGet(env, ['월정산!A3:H500', 'SETTINGS!B9:B9']);
   const [settlementsRange, settingsRange] = data.valueRanges || [];
   const laborByMonth = new Map();
   for (const row of settlementsRange?.values || []) {
     const ym = normalizeMonthValue(row?.[0]);
-    if (/^2026-(0[1-9]|1[0-2])$/.test(ym)) laborByMonth.set(ym, n(row?.[7]));
+    if (isSupportedMonth(ym)) laborByMonth.set(ym, n(row?.[7]));
   }
   const defaultLaborFee = n(settingsRange?.values?.[0]?.[0]) || 200000;
   return { laborByMonth, defaultLaborFee };
 }
 
-async function computeAndWrite(env, { startMonth = '2026-01', initialize = false } = {}) {
+async function computeAndWrite(env, { year, startMonth, initialize = false } = {}) {
+  const y = String(year || yearOfMonth(startMonth));
+  if (!isSupportedYear(y)) throw new Error('지원하지 않는 연도입니다.');
+  const months = monthsForYear(y);
+  const start = isSupportedMonth(startMonth) && yearOfMonth(startMonth) === y ? startMonth : `${y}-01`;
+  const startIndex = Math.max(0, months.indexOf(start));
   const db = await ensureAppTables(env);
-  const startIndex = Math.max(0, months2026.indexOf(startMonth));
   const [expenses, loans] = await Promise.all([listExpenses(env), listLoans(env)]);
 
   let laborByMonth = new Map();
@@ -69,19 +68,21 @@ async function computeAndWrite(env, { startMonth = '2026-01', initialize = false
     defaultLaborFee = config.defaultLaborFee;
   }
 
+  // 연도별 정산은 독립적이다. 1월은 항상 carryIn = 0에서 시작한다.
   let carry = 0;
   if (startIndex > 0) {
     const prev = await db.prepare('SELECT carry_out FROM monthly_summary WHERE month=? LIMIT 1')
-      .bind(months2026[startIndex - 1]).first();
+      .bind(months[startIndex - 1]).first();
     carry = n(prev?.carry_out);
   }
 
-  const existingRows = await db.prepare('SELECT month,labor_fee FROM monthly_summary ORDER BY month').all();
+  const existingRows = await db.prepare('SELECT month,labor_fee FROM monthly_summary WHERE month LIKE ? ORDER BY month')
+    .bind(`${y}-%`).all();
   const existingLabor = new Map((existingRows.results || []).map((r) => [String(r.month || ''), n(r.labor_fee)]));
   const now = new Date().toISOString();
 
-  for (let i = startIndex; i < months2026.length; i += 1) {
-    const ym = months2026[i];
+  for (let i = startIndex; i < months.length; i += 1) {
+    const ym = months[i];
     const monthExpenses = expenses.filter((r) => r.month === ym);
     const loan = loans.find((r) => r.month === ym);
     const living = monthExpenses.reduce((sum, r) => sum + n(r.amount), 0);
@@ -127,33 +128,52 @@ async function computeAndWrite(env, { startMonth = '2026-01', initialize = false
   return db;
 }
 
-export async function ensureMonthlySummary(env) {
+export async function ensureYearSummary(env, year) {
+  const y = String(year || '');
+  if (!isSupportedYear(y)) throw new Error('지원하지 않는 연도입니다.');
   const db = await ensureAppTables(env);
-  const count = await db.prepare('SELECT COUNT(*) AS c FROM monthly_summary').first();
+  const count = await db.prepare('SELECT COUNT(*) AS c FROM monthly_summary WHERE month LIKE ?').bind(`${y}-%`).first();
   if (Number(count?.c || 0) >= 12) return db;
-  return computeAndWrite(env, { startMonth: '2026-01', initialize: true });
+  return computeAndWrite(env, { year: y, startMonth: `${y}-01`, initialize: true });
+}
+
+export async function ensureMonthlySummary(env, month = '2026-01') {
+  const ym = normalizeMonthValue(month);
+  const year = yearOfMonth(ym);
+  if (!isSupportedMonth(ym)) throw new Error('지원하지 않는 월입니다.');
+  return ensureYearSummary(env, year);
 }
 
 export async function recalculateMonthlySummaryFrom(env, month) {
-  if (!/^2026-(0[1-9]|1[0-2])$/.test(month || '')) return ensureMonthlySummary(env);
-  await ensureMonthlySummary(env);
-  return computeAndWrite(env, { startMonth: month, initialize: false });
+  const ym = normalizeMonthValue(month);
+  if (!isSupportedMonth(ym)) return null;
+  const year = yearOfMonth(ym);
+  await ensureYearSummary(env, year);
+  return computeAndWrite(env, { year, startMonth: ym, initialize: false });
 }
 
 export async function getMonthlySummary(env, month) {
-  const db = await ensureMonthlySummary(env);
-  const row = await db.prepare('SELECT * FROM monthly_summary WHERE month=? LIMIT 1').bind(month).first();
+  const ym = normalizeMonthValue(month);
+  if (!isSupportedMonth(ym)) return null;
+  const db = await ensureMonthlySummary(env, ym);
+  const row = await db.prepare('SELECT * FROM monthly_summary WHERE month=? LIMIT 1').bind(ym).first();
   return mapSummary(row);
 }
 
-export async function getMonthlySummaries(env) {
-  const db = await ensureMonthlySummary(env);
+export async function getMonthlySummaries(env, { year = null } = {}) {
+  const db = await ensureAppTables(env);
+  if (year) {
+    const y = String(year);
+    await ensureYearSummary(env, y);
+    const result = await db.prepare('SELECT * FROM monthly_summary WHERE month LIKE ? ORDER BY month ASC').bind(`${y}-%`).all();
+    return (result.results || []).map(mapSummary);
+  }
   const result = await db.prepare('SELECT * FROM monthly_summary ORDER BY month ASC').all();
   return (result.results || []).map(mapSummary);
 }
 
 export async function getPreviousMonthlySummary(env, month) {
-  const prev = previousMonth(month);
-  if (!/^2026-/.test(prev)) return null;
+  const prev = previousMonthSameYear(month);
+  if (!prev) return null;
   return getMonthlySummary(env, prev);
 }

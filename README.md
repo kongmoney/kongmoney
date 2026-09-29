@@ -1,31 +1,22 @@
-# KongMoney v5.8.0 PATCH
+# kongmoney v5.9.0 PATCH
 
-기준: v5.7.0 적용 후 덮어쓰기용 패치.
+2025/2026 다중연도 기반 패치.
 
-## 변경사항
-- D1 `monthly_summary` 테이블 추가
-- 월정산 결과를 D1 캐시로 저장
-- 대시보드 월 조회 시 월정산 계산을 매번 다시 하지 않고 D1 캐시에서 즉시 조회
-- 지출 추가/수정/삭제 시 변경 월부터 12월까지 CE 이월 체인을 포함해 필요한 구간만 재계산
-- 대출 수정/초기화 시 변경 월부터 12월까지 필요한 구간만 재계산
-- 최초 1회 월정산 H열 수고비와 SETTINGS 기본값을 읽어 2026년 12개월 캐시 생성
-- 시트 동기화 시 D1 지출 + D1 대출 + D1 월정산 캐시를 Google Sheet에 백업
-- `/api/d1-status`에 `monthlySummaryCount` 추가
+- 조회 월 팝업에 2025 / 2026 연도 전환 버튼 추가
+- 선택 연도 기준 1~12월 바로가기 유지
+- 이전/다음 달 이동은 2025-01 ~ 2026-12 범위에서 연도 경계를 넘어 이동
+- D1 지출/대출/월메모/월마감 API를 2025/2026 공통 지원
+- monthly_summary를 연도별 12개월 캐시로 분리
+- 각 연도 1월 carryIn은 항상 0에서 독립 시작
+- 1월 전월 비교는 전년도 12월과 연결하지 않음
+- 2026-01/02 CE 자동이체 30만원 규칙 유지, 그 외 지원 월은 40만원
+- 대출금 변동추이는 현재 선택 연도만 조회
 
-## 패치 파일
-- functions/api/_lib/d1.js
-- functions/api/_lib/summary-store.js (신규)
-- functions/api/_lib/settlement.js
-- functions/api/dashboard.js
-- functions/api/expenses.js
-- functions/api/loan.js
-- functions/api/sheet-sync.js
-- functions/api/d1-status.js
-- VERSION.txt
-- README.md
+이 ZIP은 전체 배포본이 아니라 수정/신규 파일만 포함한 패치입니다.
 
 ## 배포/커밋 내역
 <!-- AUTO_DEPLOY_HISTORY -->
+- 2026-09-30 03:11 KST — chore: kongmoney ZIP deploy 09-29-22:42 — 13개 파일 업로드
 - 2026-09-30 02:56 KST — chore: kongmoney ZIP deploy 09-29-22:42 — 10개 파일 업로드
 - 2026-09-30 02:29 KST — chore: kongmoney ZIP deploy 09-29-22:42 — 12개 파일 업로드
 - 2026-09-30 02:20 KST — chore: kongmoney ZIP deploy 09-29-22:42 — 11개 파일 업로드
