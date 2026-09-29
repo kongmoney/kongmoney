@@ -1,1 +1,1 @@
-kongmoney-v5.2.3-ui-ux-fix
+kongmoney-v5.2.4-expense-persist-cat-face

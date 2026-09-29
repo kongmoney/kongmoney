@@ -61,8 +61,11 @@ Cloudflare Pages + Google Sheets + GitHub 기반 공동 가계부입니다.
 - 모바일 메인 히어로를 짧고 컴팩트한 2열 구조로 축소
 - 모든 메인 dialog 팝업에 바깥 영역 클릭 닫기 공통 적용
 
+- 2026-09-29 21:xx KST — v5.2.4 — 월 선택 유지(localStorage), 저장 직후/새로고침 후 지출목록 유지 보강, 메인 마스코트 고양이 얼굴로 수정
+
 ## 배포/커밋 내역
 <!-- AUTO_DEPLOY_HISTORY -->
+- 2026-09-29 21:26 KST — chore: kongmoney ZIP deploy 09-29-21:07 — 18개 파일 업로드
 - 2026-09-29 21:22 KST — chore: kongmoney ZIP deploy 09-29-21:07 — 18개 파일 업로드
 - 2026-09-29 21:17 KST — chore: kongmoney ZIP deploy 09-29-21:07 — 18개 파일 업로드
 - 2026-09-29 21:13 KST — chore: kongmoney ZIP deploy 09-29-21:07 — 18개 파일 업로드

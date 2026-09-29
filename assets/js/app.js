@@ -1,9 +1,53 @@
 const today = new Date();
 const initialMonth = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
-const state = { month: initialMonth, filter: '전체', data: null, loading: false };
+const STORAGE_MONTH_KEY = 'kongmoney.selectedMonth';
+const STORAGE_PENDING_KEY = 'kongmoney.pendingExpenses';
+const savedMonth = (() => { try { return localStorage.getItem(STORAGE_MONTH_KEY) || ''; } catch { return ''; } })();
+const state = { month: /^\d{4}-\d{2}$/.test(savedMonth) ? savedMonth : initialMonth, filter: '전체', data: null, loading: false };
 const won = new Intl.NumberFormat('ko-KR', { maximumFractionDigits: 0 });
 const $ = (id) => document.getElementById(id);
 const money = (n) => `${won.format(Number(n || 0))}원`;
+
+function rememberMonth(ym){ try { localStorage.setItem(STORAGE_MONTH_KEY, ym); } catch {} }
+function expenseKey(row){
+  return [row?.month,row?.category,row?.subcategory,row?.description,row?.amount,row?.splitType].map(v=>String(v ?? '')).join('|');
+}
+function getPendingExpenses(){
+  try { const raw = localStorage.getItem(STORAGE_PENDING_KEY); const arr = raw ? JSON.parse(raw) : []; return Array.isArray(arr) ? arr : []; } catch { return []; }
+}
+function setPendingExpenses(list){ try { localStorage.setItem(STORAGE_PENDING_KEY, JSON.stringify(list)); } catch {} }
+function pushPendingExpense(row){
+  const list=getPendingExpenses();
+  const key=expenseKey(row);
+  if(!list.some(item => expenseKey(item)===key)) list.push(row);
+  setPendingExpenses(list);
+}
+function mergePendingExpenses(data, month){
+  if(!data || !Array.isArray(data.expenses)) return data;
+  const pending=getPendingExpenses();
+  if(!pending.length) return data;
+  const liveKeys = new Set(data.expenses.map(expenseKey));
+  const merged = [...data.expenses];
+  const remaining = [];
+  for(const item of pending){
+    if(item.month !== month){
+      remaining.push(item);
+      continue;
+    }
+    const key=expenseKey(item);
+    if(!liveKeys.has(key)) {
+      merged.push(item);
+      remaining.push(item);
+    }
+  }
+  data.expenses = merged;
+  // Remove items that are now visible in live data for their month.
+  const allLiveKeys = new Set((data.expenses||[]).map(expenseKey));
+  const finalRemaining = pending.filter(item => item.month !== month || !allLiveKeys.has(expenseKey(item)) || !liveKeys.has(expenseKey(item)));
+  // If an item already existed in liveKeys, it means the sheet returned it; drop from pending.
+  setPendingExpenses(finalRemaining.filter(item => !(item.month===month && liveKeys.has(expenseKey(item)))));
+  return data;
+}
 
 function formatMonth(ym){ const [y,m]=ym.split('-'); return `${y}년 ${Number(m)}월`; }
 function shiftMonth(ym, delta){ const [y,m]=ym.split('-').map(Number); const d=new Date(y,m-1+delta,1); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`; }
@@ -141,7 +185,8 @@ async function load(){
   $('refreshBtn').disabled=true;
   setConnection(true,'불러오는 중…');
   try{
-    state.data=await getDashboard(state.month);
+    state.data=mergePendingExpenses(await getDashboard(state.month), state.month);
+    rememberMonth(state.month);
     setConnection(true,'Google Sheet 연결됨');
   }catch(err){
     state.data=emptyDashboard(state.month);
@@ -154,8 +199,8 @@ async function load(){
   }
 }
 
-$('prevMonth').addEventListener('click',()=>{state.month=shiftMonth(state.month,-1);load();});
-$('nextMonth').addEventListener('click',()=>{state.month=shiftMonth(state.month,1);load();});
+$('prevMonth').addEventListener('click',()=>{state.month=shiftMonth(state.month,-1); rememberMonth(state.month); load();});
+$('nextMonth').addEventListener('click',()=>{state.month=shiftMonth(state.month,1); rememberMonth(state.month); load();});
 $('refreshBtn').addEventListener('click',load);
 document.querySelectorAll('.chip').forEach(btn=>btn.addEventListener('click',()=>{
   document.querySelectorAll('.chip').forEach(x=>x.classList.remove('active'));
@@ -204,23 +249,27 @@ $('expenseForm').addEventListener('submit',async(e)=>{
 
     // 전체 화면을 다시 불러오지 않고, 방금 저장한 내역만 즉시 목록에 반영합니다.
     state.month=row.month;
+    rememberMonth(state.month);
     if(!state.data || state.data.month !== row.month) state.data=emptyDashboard(row.month);
     if(!Array.isArray(state.data.expenses)) state.data.expenses=[];
-    state.data.expenses.push({
+    const optimisticExpense = {
       month: row.month,
       category: row.category,
       subcategory: row.subcategory,
       description: row.description || '',
       amount: row.amount,
       splitType: row.splitType
-    });
+    };
+    state.data.expenses.push(optimisticExpense);
+    pushPendingExpense(optimisticExpense);
     $('monthLabel').textContent=formatMonth(state.month);
     renderExpenses();
 
-    // 합계/정산값은 뒤에서 조용히 다시 계산해 갱신하되 지출목록은 다시 그리지 않습니다.
+    // 합계/정산값은 뒤에서 조용히 다시 계산해 갱신하고,
+    // 시트 조회 결과에 방금 저장한 항목이 아직 안 잡히더라도 목록에서 사라지지 않게 병합합니다.
     getDashboard(state.month).then((fresh)=>{
-      state.data=fresh;
-      renderDashboardFields();
+      state.data = mergePendingExpenses(fresh, state.month);
+      render();
     }).catch(()=>{});
   }catch(err){
     showToast(err.message || '지출 저장에 실패했습니다.','error');
@@ -243,7 +292,8 @@ $('loanForm').addEventListener('submit',async(e)=>{
     await saveLoan({month:state.month,principal,interest,rate:ratePercent/100,balance});
     loanDlg.close();
     showToast('대출내역을 Google Sheet에 반영했습니다.');
-    await load();
+    await rememberMonth(state.month);
+load();
   }catch(err){
     showToast(err.message || '대출내역 저장에 실패했습니다.','error');
   }finally{
