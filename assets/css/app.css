@@ -330,3 +330,34 @@ button{appearance:none}
   .expense-side{flex-direction:column;align-items:flex-end;gap:7px}
   .expense-delete-btn{padding:6px 9px}
 }
+
+/* v5.3.0 - 2026-only ledger + loan trend modal */
+.mini-action-btn{border:1px solid var(--line-strong);background:#fff;border-radius:999px;padding:9px 12px;font:inherit;font-size:12px;font-weight:700;color:#5d554f;cursor:pointer;box-shadow:var(--shadow-soft);white-space:nowrap}
+.mini-action-btn:hover{transform:translateY(-1px);background:#f7fbf9}
+.trend-dialog-card{width:min(920px,calc(100vw - 28px));max-height:min(820px,calc(100vh - 28px));overflow:auto}
+.trend-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:18px 0 14px}
+.trend-summary>div{padding:15px;border:1px solid var(--line);border-radius:18px;background:#fbf8f4}
+.trend-summary>div:nth-child(1){background:#eff9f5}.trend-summary>div:nth-child(2){background:#eff8fd}.trend-summary>div:nth-child(3){background:#fff9df}
+.trend-summary span{display:block;color:var(--muted);font-size:12px;font-weight:600;margin-bottom:7px}
+.trend-summary strong{display:block;font-size:19px;letter-spacing:-.03em}
+.loan-trend-chart{width:100%;min-height:290px;border:1px solid var(--line);border-radius:22px;background:linear-gradient(180deg,#fff,#fbfaf8);padding:10px;overflow:hidden}
+.trend-svg{display:block;width:100%;height:auto;min-height:260px}
+.trend-grid{stroke:#e9e1d8;stroke-width:1;stroke-dasharray:4 6}
+.trend-axis-text{fill:#8a7f76;font-size:11px;font-family:'Paperozi',sans-serif}
+.trend-line{fill:none;stroke:#4d8d78;stroke-width:4;stroke-linecap:round;stroke-linejoin:round}
+.trend-dot{fill:#fff;stroke:#4d8d78;stroke-width:3}
+.trend-empty{display:flex;align-items:center;justify-content:center;min-height:250px;margin:0;color:var(--muted);font-weight:600}.trend-empty.error{color:#b14f61}
+.trend-table-wrap{margin-top:14px;overflow:auto;border:1px solid var(--line);border-radius:18px}
+.trend-table{width:100%;border-collapse:collapse;min-width:650px;font-size:13px;background:#fff}
+.trend-table th,.trend-table td{padding:11px 12px;text-align:right;border-bottom:1px solid var(--line)}
+.trend-table th{position:sticky;top:0;background:#f8f3ed;color:#685f57;font-size:12px}
+.trend-table th:first-child,.trend-table td:first-child{text-align:left}.trend-table tbody tr:last-child td{border-bottom:0}
+@media(max-width:620px){
+  .loan-card .section-heading{align-items:flex-start}
+  .mini-action-btn{padding:7px 9px;font-size:10px}
+  .trend-dialog-card{width:calc(100vw - 18px);max-height:calc(100vh - 18px);padding:17px}
+  .trend-summary{grid-template-columns:1fr;gap:7px}
+  .trend-summary>div{display:flex;align-items:center;justify-content:space-between;padding:11px 13px}
+  .trend-summary span{margin:0}.trend-summary strong{font-size:16px}
+  .loan-trend-chart{min-height:220px;padding:4px}.trend-svg{min-height:210px}
+}

@@ -89,7 +89,7 @@ function autoTransferForMonth(ym, configured) {
 export async function onRequestGet({ request, env }) {
   try {
     const month = new URL(request.url).searchParams.get('month');
-    if (!isMonth(month)) return bad('month must be YYYY-MM');
+    if (!/^2026-(0[1-9]|1[0-2])$/.test(month || '')) return bad('조회 월은 2026년 1월~12월만 지원합니다.');
 
     const data = await sheetsGet(env, [
       '지출내역!A3:I5000',
@@ -99,24 +99,20 @@ export async function onRequestGet({ request, env }) {
     ]);
 
     const [expensesRange, loansRange, settlementsRange, settingsRange] = data.valueRanges || [];
-    const expenses = (expensesRange?.values || []).map((row, i) => normalizeExpense(row, i + 3)).filter((r) => isMonth(r.month));
-    const loans = (loansRange?.values || []).map(normalizeLoan).filter((r) => isMonth(r.month));
+    const expenses = (expensesRange?.values || []).map((row, i) => normalizeExpense(row, i + 3)).filter((r) => /^2026-(0[1-9]|1[0-2])$/.test(r.month));
+    const loans = (loansRange?.values || []).map(normalizeLoan).filter((r) => /^2026-(0[1-9]|1[0-2])$/.test(r.month));
 
     const laborFeeByMonth = new Map();
     for (const row of settlementsRange?.values || []) {
       const ym = normalizeMonthValue(row[0]);
-      if (isMonth(ym)) laborFeeByMonth.set(ym, n(row[7]));
+      if (/^2026-(0[1-9]|1[0-2])$/.test(ym)) laborFeeByMonth.set(ym, n(row[7]));
     }
 
     const settingsRows = settingsRange?.values || [];
     const defaultLaborFee = n(settingsRows?.[0]?.[0]) || 200000;
     const configuredAutoTransfer = n(settingsRows?.[3]?.[0]) || 400000;
 
-    const expenseMonths = expenses.map((r) => r.month);
-    const loanMonths = loans.map((r) => r.month);
-    const settlementMonths = [...laborFeeByMonth.keys()];
-    const allMonths = [...expenseMonths, ...loanMonths, ...settlementMonths].filter(isMonth).sort();
-    const carryStart = allMonths[0] && allMonths[0] <= month ? allMonths[0] : month;
+    const carryStart = month.startsWith('2026-') ? '2026-01' : month;
 
     let carry = 0;
     let requestedSummary = null;

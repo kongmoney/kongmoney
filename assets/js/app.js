@@ -2,9 +2,9 @@ const today = new Date();
 const initialMonth = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
 const STORAGE_MONTH_KEY = 'kongmoney.selectedMonth';
 const STORAGE_PENDING_KEY = 'kongmoney.pendingExpenses';
-const SETTLEMENT_SYNC_VERSION = '2026-autotransfer-v2';
+const SETTLEMENT_SYNC_VERSION = '2026-clean-year-v3';
 const savedMonth = (() => { try { return localStorage.getItem(STORAGE_MONTH_KEY) || ''; } catch { return ''; } })();
-const state = { month: /^\d{4}-\d{2}$/.test(savedMonth) ? savedMonth : initialMonth, filter: '전체', data: null, loading: false };
+const state = { month: /^2026-(0[1-9]|1[0-2])$/.test(savedMonth) ? savedMonth : (/^2026-/.test(initialMonth) ? initialMonth : '2026-01'), filter: '전체', data: null, loading: false };
 const won = new Intl.NumberFormat('ko-KR', { maximumFractionDigits: 0 });
 const $ = (id) => document.getElementById(id);
 const money = (n) => `${won.format(Number(n || 0))}원`;
@@ -70,7 +70,7 @@ function mergePendingExpenses(data, month){
 }
 
 function formatMonth(ym){ const [y,m]=ym.split('-'); return `${y}년 ${Number(m)}월`; }
-function shiftMonth(ym, delta){ const [y,m]=ym.split('-').map(Number); const d=new Date(y,m-1+delta,1); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`; }
+function shiftMonth(ym, delta){ const [y,m]=ym.split('-').map(Number); const d=new Date(y,m-1+delta,1); const next=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`; if(next<'2026-01') return '2026-01'; if(next>'2026-12') return '2026-12'; return next; }
 function emptyDashboard(month){ return {month,summary:{living:0,loan:0,total:0,managerFinal:0,memberAFinal:0,memberBFinal:0,carryIn:0,autoTransfer:0,carryOut:0},expenses:[],loan:{principal:0,interest:0,total:0,balance:0,rate:0}}; }
 function escapeHtml(v){return String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));}
 function digitsOnly(value){ return String(value ?? '').replace(/[^0-9]/g,''); }
@@ -178,6 +178,59 @@ function renderExpenses(){
   }
 }
 
+
+async function getLoanTrend(){
+  const res=await fetch('/api/loan-trend',{headers:{accept:'application/json'},cache:'no-store'});
+  const body=await res.json().catch(()=>({}));
+  if(!res.ok || body.ok===false) throw new Error(body.error || `대출 변동추이 조회 실패 (${res.status})`);
+  return body;
+}
+
+function renderLoanTrendChart(rows){
+  const host=$('loanTrendChart');
+  const data=(rows||[]).filter(r=>r && r.month);
+  if(!data.length){ host.innerHTML='<p class="trend-empty">대출 데이터가 없습니다.</p>'; return; }
+  const W=760,H=280, pad={l:54,r:22,t:22,b:42};
+  const vals=data.map(r=>Number(r.balance||0));
+  let min=Math.min(...vals), max=Math.max(...vals);
+  if(max===min){ max+=1; min=Math.max(0,min-1); }
+  const spread=max-min;
+  min=Math.max(0,min-spread*.18); max=max+spread*.12;
+  const x=i=>pad.l+(W-pad.l-pad.r)*(data.length===1?0:i/(data.length-1));
+  const y=v=>pad.t+(H-pad.t-pad.b)*(1-(v-min)/(max-min));
+  const points=data.map((r,i)=>`${x(i).toFixed(1)},${y(Number(r.balance||0)).toFixed(1)}`).join(' ');
+  const area=`${pad.l},${H-pad.b} ${points} ${x(data.length-1)},${H-pad.b}`;
+  const grid=[0,.25,.5,.75,1].map(t=>{
+    const yy=pad.t+(H-pad.t-pad.b)*t;
+    const val=max-(max-min)*t;
+    return `<line x1="${pad.l}" y1="${yy}" x2="${W-pad.r}" y2="${yy}" class="trend-grid"/><text x="${pad.l-8}" y="${yy+4}" text-anchor="end" class="trend-axis-text">${Math.round(val/10000).toLocaleString()}만</text>`;
+  }).join('');
+  const ticks=data.map((r,i)=>`<text x="${x(i)}" y="${H-16}" text-anchor="middle" class="trend-axis-text">${Number(r.month.slice(5))}월</text>`).join('');
+  const dots=data.map((r,i)=>`<circle cx="${x(i)}" cy="${y(Number(r.balance||0))}" r="4.2" class="trend-dot"><title>${formatMonth(r.month)} · ${money(r.balance)}</title></circle>`).join('');
+  host.innerHTML=`<svg class="trend-svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="2026년 대출 잔액 라인 차트"><defs><linearGradient id="trendFill" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stop-color="#b9e4d2" stop-opacity=".58"/><stop offset="100%" stop-color="#b9e4d2" stop-opacity=".06"/></linearGradient></defs>${grid}<polygon points="${area}" fill="url(#trendFill)"/><polyline points="${points}" class="trend-line"/>${dots}${ticks}</svg>`;
+}
+
+function renderLoanTrendTable(rows){
+  const tbody=$('loanTrendTableBody');
+  tbody.innerHTML=(rows||[]).map(r=>`<tr><td>${Number(r.month.slice(5))}월</td><td>${money(r.principal)}</td><td>${money(r.interest)}</td><td>${(Number(r.rate||0)*100).toFixed(2)}%</td><td>${money(r.balance)}</td></tr>`).join('');
+}
+
+async function openLoanTrendDialog(){
+  const dialog=$('loanTrendDialog');
+  dialog.showModal();
+  $('loanTrendChart').innerHTML='<p class="trend-empty">불러오는 중…</p>';
+  try{
+    const data=await getLoanTrend();
+    $('trendStartBalance').textContent=money(data.summary?.startBalance);
+    $('trendCurrentBalance').textContent=money(data.summary?.currentBalance);
+    $('trendPrincipalPaid').textContent=money(data.summary?.cumulativePrincipal);
+    renderLoanTrendChart(data.rows);
+    renderLoanTrendTable(data.rows);
+  }catch(err){
+    $('loanTrendChart').innerHTML=`<p class="trend-empty error">${escapeHtml(err.message||'대출 변동추이를 불러오지 못했습니다.')}</p>`;
+  }
+}
+
 async function saveLoan(payload){
   const res=await fetch('/api/loan',{method:'PUT',headers:{'content-type':'application/json'},body:JSON.stringify(payload)});
   const body=await res.json().catch(()=>({}));
@@ -256,6 +309,7 @@ $('expenseList').addEventListener('click', async (e)=>{
 
 const dlg=$('expenseDialog');
 const loanDlg=$('loanDialog');
+const trendDlg=$('loanTrendDialog');
 
 function enableBackdropClose(dialog){
   if(!dialog) return;
@@ -273,6 +327,8 @@ $('loanInterestInput').addEventListener('input',updateLoanPreview);
 $('addExpenseBtn').addEventListener('click',()=>{ $('expenseMonth').value=state.month; dlg.showModal(); });
 $('closeExpenseDialog').addEventListener('click',()=>dlg.close());
 $('closeLoanDialog').addEventListener('click',()=>loanDlg.close());
+$('loanTrendBtn').addEventListener('click',openLoanTrendDialog);
+$('closeLoanTrendDialog').addEventListener('click',()=>trendDlg.close());
 document.querySelectorAll('[data-loan-edit]').forEach(btn=>btn.addEventListener('click',openLoanDialog));
 
 $('expenseForm').addEventListener('submit',async(e)=>{
@@ -338,11 +394,8 @@ $('loanForm').addEventListener('submit',async(e)=>{
     await saveLoan({month:state.month,principal,interest,rate:ratePercent/100,balance});
     loanDlg.close();
     showToast('대출내역을 Google Sheet에 반영했습니다.');
-    await rememberMonth(state.month);
-load().then(async()=>{
-  const synced=await syncSettlementOnce();
-  if(synced) await load();
-});
+    rememberMonth(state.month);
+    await load();
   }catch(err){
     showToast(err.message || '대출내역 저장에 실패했습니다.','error');
   }finally{
@@ -350,4 +403,7 @@ load().then(async()=>{
   }
 });
 
-load();
+(async()=>{
+  const synced=await syncSettlementOnce();
+  await load();
+})();

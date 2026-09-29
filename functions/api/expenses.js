@@ -56,7 +56,7 @@ export async function onRequestPost({ request, env }) {
     const amount = Number(amountText);
     const rawSplitType = String(body.splitType || '').trim();
 
-    if (!/^\d{4}-\d{2}$/.test(month)) return bad('month must be YYYY-MM');
+    if (!/^2026-(0[1-9]|1[0-2])$/.test(month)) return bad('지출내역은 2026년 1월~12월만 관리합니다.');
     const monthNo = Number(month.slice(5, 7));
     if (monthNo < 1 || monthNo > 12) return bad('invalid month');
     if (!category) return bad('대분류를 선택해주세요.');

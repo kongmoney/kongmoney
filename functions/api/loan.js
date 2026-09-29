@@ -27,7 +27,7 @@ export async function onRequestPut({ request, env }) {
     const interest = n(body.interest);
     const rate = n(body.rate);
     const balance = n(body.balance);
-    if (!/^\d{4}-\d{2}$/.test(month)) return bad('month must be YYYY-MM');
+    if (!/^2026-(0[1-9]|1[0-2])$/.test(month)) return bad('대출내역은 2026년 1월~12월만 관리합니다.');
     if (principal < 0 || interest < 0 || balance < 0 || rate < 0) return bad('invalid loan values');
 
     const total = principal + interest;
