@@ -32,7 +32,7 @@ function normalizeLoan(row) {
   };
 }
 
-export async function syncMonthlySettlement(env) {
+export async function syncMonthlySettlement(env, { cleanup = false } = {}) {
   const data = await sheetsGet(env, [
     '지출내역!A3:I5000',
     '대출내역!A3:I500',
@@ -88,8 +88,9 @@ export async function syncMonthlySettlement(env) {
     ]);
   }
 
-  // 2026년 1~12월만 남기고 다시 작성한다. 2025-11/12가 계산 체인에 섞이지 않는다.
-  await sheetsClear(env, '월정산!A3:P500');
+  // Normal saves overwrite only the fixed 2026 rows. Full cleanup is reserved
+  // for the explicit one-time settlement sync endpoint.
+  if (cleanup) await sheetsClear(env, '월정산!A3:P500');
   await sheetsUpdate(env, '월정산!A3:P14', output, 'RAW');
   return { ok: true, updated: output.length };
 }

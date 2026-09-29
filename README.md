@@ -75,8 +75,11 @@ Cloudflare Pages + Google Sheets + GitHub 기반 공동 가계부입니다.
 
 - 2026-09-29 — v5.3.1 — 월별 대출 입력 초기화 추가. 원금/이자는 빈칸=0원, 잔액 빈칸은 전월잔액-원금 자동계산. 초기화 시 전월 잔액/금리를 승계하고 월정산·대출금 변동추이를 다시 동기화.
 
+- 2026-09-29 — v5.3.2 — 지출 추가/삭제 속도 최적화: Google OAuth 토큰 캐시, 월정산 백그라운드 동기화, 저장마다 월정산 전체 clear 제거, 삭제 즉시 UI 반영
+
 ## 배포/커밋 내역
 <!-- AUTO_DEPLOY_HISTORY -->
+- 2026-09-29 22:56 KST — chore: kongmoney ZIP deploy 09-29-22:42 — 22개 파일 업로드
 - 2026-09-29 22:50 KST — chore: kongmoney ZIP deploy 09-29-22:42 — 22개 파일 업로드
 - 2026-09-29 22:42 KST — chore: kongmoney ZIP deploy 09-29-22:42 — 22개 파일 업로드
 - 2026-09-29 21:48 KST — chore: kongmoney ZIP deploy 09-29-21:07 — 20개 파일 업로드

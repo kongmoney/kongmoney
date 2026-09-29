@@ -45,7 +45,8 @@ async function findNextExpenseRow(env) {
   return 3 + lastUsedOffset + 1;
 }
 
-export async function onRequestPost({ request, env }) {
+export async function onRequestPost(context) {
+  const { request, env } = context;
   try {
     const body = await request.json();
     const month = String(body.month || '').trim();
@@ -79,7 +80,9 @@ export async function onRequestPost({ request, env }) {
       split.memberB,
     ]], 'RAW');
 
-    await syncMonthlySettlement(env);
+    // The expense row is already safely stored. Rebuild the monthly settlement
+    // in the background so the user does not wait for several extra Sheets calls.
+    context.waitUntil(syncMonthlySettlement(env).catch((err) => console.error('settlement background sync failed', err)));
 
     return json({
       ok: true,
@@ -96,7 +99,8 @@ export async function onRequestPost({ request, env }) {
 }
 
 
-export async function onRequestDelete({ request, env }) {
+export async function onRequestDelete(context) {
+  const { request, env } = context;
   try {
     const body = await request.json().catch(() => ({}));
     const sheetRow = Number(body.sheetRow);
@@ -106,7 +110,7 @@ export async function onRequestDelete({ request, env }) {
 
     // 지출 데이터 열(A:I)만 비워 시트의 다른 서식/구조는 유지한다.
     await sheetsClear(env, `지출내역!A${sheetRow}:I${sheetRow}`);
-    await syncMonthlySettlement(env);
+    context.waitUntil(syncMonthlySettlement(env).catch((err) => console.error('settlement background sync failed', err)));
     return json({ ok: true, mode: 'deleted', sheetRow });
   } catch (err) {
     return bad(err?.message || 'expense delete error', 500);

@@ -1,6 +1,11 @@
 const SCOPE = 'https://www.googleapis.com/auth/spreadsheets';
 const TOKEN_URL = 'https://oauth2.googleapis.com/token';
 
+// Reuse the OAuth token inside a warm Worker isolate instead of requesting a new
+// token for every Sheets read/write. This removes a large amount of latency.
+let cachedAccessToken = '';
+let cachedAccessTokenExpiresAt = 0;
+
 function b64url(bytes) {
   let s = '';
   for (const b of new Uint8Array(bytes)) s += String.fromCharCode(b);
@@ -38,6 +43,10 @@ async function readError(res) {
 }
 
 export async function getAccessToken(env) {
+  const nowMs = Date.now();
+  if (cachedAccessToken && cachedAccessTokenExpiresAt > nowMs + 60_000) {
+    return cachedAccessToken;
+  }
   const clientEmail = getServiceAccountEmail(env);
   if (!clientEmail || !env.GOOGLE_PRIVATE_KEY) {
     throw new Error('Google credentials are not configured. Check GOOGLE_CLIENT_EMAIL and GOOGLE_PRIVATE_KEY.');
@@ -87,7 +96,9 @@ export async function getAccessToken(env) {
 
   const json = await res.json();
   if (!json.access_token) throw new Error('Google token response did not include access_token.');
-  return json.access_token;
+  cachedAccessToken = json.access_token;
+  cachedAccessTokenExpiresAt = Date.now() + Math.max(60, Number(json.expires_in || 3600)) * 1000;
+  return cachedAccessToken;
 }
 
 export async function sheetsGet(env, ranges) {

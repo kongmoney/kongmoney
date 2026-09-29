@@ -305,9 +305,16 @@ $('expenseList').addEventListener('click', async (e)=>{
     const body=await res.json().catch(()=>({}));
     if(!res.ok || body.ok===false) throw new Error(body.error || `삭제 실패 (${res.status})`);
     removePendingExpense(row);
-    state.data = mergePendingExpenses(await getDashboard(state.month), state.month);
-    render();
+    if(Array.isArray(state.data?.expenses)) {
+      state.data.expenses = state.data.expenses.filter(item => Number(item.sheetRow) !== sheetRow);
+    }
+    renderExpenses();
     showToast('지출을 삭제했고 Google Sheet에도 반영했습니다.');
+    // Totals/settlement refresh quietly after the row disappears immediately.
+    getDashboard(state.month).then((fresh)=>{
+      state.data = mergePendingExpenses(fresh, state.month);
+      render();
+    }).catch(()=>{});
   }catch(err){
     btn.disabled=false;
     showToast(err.message || '지출 삭제에 실패했습니다.','error');
