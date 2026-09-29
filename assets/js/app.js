@@ -188,7 +188,7 @@ $('expenseForm').addEventListener('submit',async(e)=>{
     if(!res.ok || body.ok===false) throw new Error(body.error || `저장 실패 (${res.status})`);
     dlg.close();
     form.reset();
-    showToast('Google Sheet에 지출을 저장했습니다.');
+    showToast(`${formatMonth(row.month)} 지출을 Google Sheet에 저장했습니다.`);
     state.month=row.month;
     await load();
   }catch(err){
