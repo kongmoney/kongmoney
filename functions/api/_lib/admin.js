@@ -14,7 +14,7 @@ export function requireAdmin(request, env) {
 
 export function githubConfig(env) {
   return {
-    owner: String(env.GITHUB_OWNER || 'rjs1127').trim(),
+    owner: String(env.GITHUB_OWNER || 'kongmoney').trim(),
     repo: String(env.GITHUB_REPO || 'kongmoney').trim(),
     branch: String(env.GITHUB_BRANCH || 'main').trim(),
     token: String(env.GITHUB_TOKEN || '').trim(),
@@ -34,6 +34,7 @@ export async function githubFetch(env, path, init = {}) {
   if (!cfg.token) throw new Error('GITHUB_TOKEN is not configured.');
   const headers = new Headers(init.headers || {});
   headers.set('accept', 'application/vnd.github+json');
+  headers.set('user-agent', 'kongmoney-cloudflare-admin');
   headers.set('authorization', `Bearer ${cfg.token}`);
   headers.set('x-github-api-version', '2026-03-10');
   if (init.body && !headers.has('content-type')) headers.set('content-type', 'application/json');

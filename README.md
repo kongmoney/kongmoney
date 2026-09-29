@@ -36,7 +36,7 @@ Cloudflare Pages + Google Sheets + GitHub 기반 공동 가계부입니다.
 
 - `ADMIN_KEY` (Secret) — 관리자 화면 인증용 임의 문자열
 - `GITHUB_TOKEN` (Secret) — `kongmoney` 저장소 Contents write 권한
-- `GITHUB_OWNER` — 기본값 `rjs1127`
+- `GITHUB_OWNER` — 기본값 `kongmoney`
 - `GITHUB_REPO` — 기본값 `kongmoney`
 - `GITHUB_BRANCH` — 기본값 `main`
 
@@ -50,4 +50,5 @@ Cloudflare Pages + Google Sheets + GitHub 기반 공동 가계부입니다.
 
 ## 배포/커밋 내역
 <!-- AUTO_DEPLOY_HISTORY -->
+- 2026-09-29 — GitHub REST API User-Agent 403 수정, GitHub owner 기본값 kongmoney로 정정
 - 2026-09-29 — 관리자 ZIP 배포 / GitHub 커밋 / Cloudflare 배포 상태 확인 기능 추가, 사용자 닉네임 SH·JH·CE로 변경

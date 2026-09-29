@@ -1,1 +1,1 @@
-kongmoney-admin-v5
+kongmoney-admin-v5.1-user-agent-fix
