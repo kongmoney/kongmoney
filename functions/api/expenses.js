@@ -3,6 +3,7 @@ import { normalizeMonthValue, is2026Month } from './_lib/year2026.js';
 import { assertMonthOpen } from './_lib/monthmeta.js';
 import { ensureAppTables } from './_lib/d1.js';
 import { insertExpense, updateExpense, deleteExpense, getExpenseById } from './_lib/expense-store.js';
+import { recalculateMonthlySummaryFrom } from './_lib/summary-store.js';
 
 const SH_JH_ALIASES = new Set([
   '총무+구성원 A','총무+구성원 A 부담','총무 + 구성원 A','2인 공동',
@@ -87,6 +88,7 @@ export async function onRequestPost(context) {
     await assertMonthOpen(env, item.month);
 
     const saved = await insertExpense(env, item);
+    await recalculateMonthlySummaryFrom(env, item.month);
     let recurringTemplate = null;
     if (saveAsRecurring) recurringTemplate = await saveRecurringFromExpense(env, item);
 
@@ -130,6 +132,8 @@ export async function onRequestPut(context) {
 
     const saved = await updateExpense(env, id, item);
     if (!saved) return bad('수정할 지출내역을 찾지 못했습니다.', 404);
+    const recalcMonth = current.month <= item.month ? current.month : item.month;
+    await recalculateMonthlySummaryFrom(env, recalcMonth);
 
     let recurringTemplate = null;
     if (saveAsRecurring) recurringTemplate = await saveRecurringFromExpense(env, item);
@@ -168,6 +172,7 @@ export async function onRequestDelete(context) {
     await assertMonthOpen(env, current.month);
 
     await deleteExpense(env, id);
+    await recalculateMonthlySummaryFrom(env, current.month);
     return json({ ok: true, storage: 'd1', mode: 'deleted', sheetRow: id, month: current.month });
   } catch (err) {
     return bad(err?.message || 'expense delete error', err?.status || 500);

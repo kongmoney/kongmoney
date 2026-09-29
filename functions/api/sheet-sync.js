@@ -50,7 +50,7 @@ export async function onRequestPost({ env }) {
     }
 
     const settlement = await syncMonthlySettlement(env);
-    const lastSync = await setLastSheetSync(env, `expenses:${rows.length};loans:${loanRows.length}`);
+    const lastSync = await setLastSheetSync(env, `expenses:${rows.length};loans:${loanRows.length};summaries:${Number(settlement?.updated || 0)}`);
 
     return json({
       ok: true,

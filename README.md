@@ -1,153 +1,32 @@
-# kongmoney · 콩머니
+# KongMoney v5.8.0 PATCH
 
-Cloudflare Pages + Google Sheets + GitHub 기반 공동 가계부입니다.
+기준: v5.7.0 적용 후 덮어쓰기용 패치.
 
-## 현재 구성
+## 변경사항
+- D1 `monthly_summary` 테이블 추가
+- 월정산 결과를 D1 캐시로 저장
+- 대시보드 월 조회 시 월정산 계산을 매번 다시 하지 않고 D1 캐시에서 즉시 조회
+- 지출 추가/수정/삭제 시 변경 월부터 12월까지 CE 이월 체인을 포함해 필요한 구간만 재계산
+- 대출 수정/초기화 시 변경 월부터 12월까지 필요한 구간만 재계산
+- 최초 1회 월정산 H열 수고비와 SETTINGS 기본값을 읽어 2026년 12개월 캐시 생성
+- 시트 동기화 시 D1 지출 + D1 대출 + D1 월정산 캐시를 Google Sheet에 백업
+- `/api/d1-status`에 `monthlySummaryCount` 추가
 
-- 사용자 화면: `/`
-- 관리자 화면: `/admin.html`
-- Google Sheets 실데이터 조회/지출 추가/대출내역 수정
-- SH / JH / CE 정산
-- 지출 분담방식: 3인 공동 / JH + SH / JH + CE / SH + JH
-- CE 자동이체 및 차액 이월 (2026-01·02: 300,000원 / 2026-03 이후: 400,000원)
-- 관리자 ZIP 업로드 → GitHub 커밋 → Cloudflare Pages 자동 배포
-- 관리자 페이지에서 최신 GitHub 커밋 / Cloudflare Pages 배포 상태 조회
-
-## 관리자 배포 방식
-
-관리자 페이지에서 전체 소스 ZIP을 선택하면 압축을 브라우저에서 풀고, 서버 API가 GitHub Git Data API를 이용해 업로드 파일을 한 번의 커밋으로 반영합니다.
-
-- ZIP에 포함된 파일: 추가 또는 덮어쓰기
-- ZIP에 없는 기존 파일: 유지
-- `README.md`: 기존 배포 이력을 보존하면서 새 커밋 내역 자동 추가
-- GitHub `main` 커밋 후 Cloudflare Pages Git 연동이 자동 배포
-- 관리자 화면에서 새 커밋 SHA와 Pages 배포 성공/실패를 확인
-
-## Cloudflare Variables / Secrets
-
-기존 Google Sheets 연결 값은 그대로 유지합니다.
-
-### Google Sheets
-
-- `GOOGLE_SHEET_ID`
-- `GOOGLE_CLIENT_EMAIL`
-- `GOOGLE_PRIVATE_KEY` (Secret)
-
-### 관리자 / GitHub
-
-- `ADMIN_KEY` (Secret) — 관리자 화면 인증용 임의 문자열
-- `GITHUB_TOKEN` (Secret) — `kongmoney` 저장소 Contents write 권한
-- `GITHUB_OWNER` — 기본값 `kongmoney`
-- `GITHUB_REPO` — 기본값 `kongmoney`
-- `GITHUB_BRANCH` — 기본값 `main`
-
-### Cloudflare 배포 상태 조회
-
-- `CLOUDFLARE_ACCOUNT_ID`
-- `CLOUDFLARE_API_TOKEN` (Secret) — Cloudflare Pages 조회 권한
-- `CLOUDFLARE_PROJECT_NAME` — 기본값 `kongmoney`
-
-> 토큰이나 비밀키는 GitHub 소스에 넣지 않고 Cloudflare Variables and Secrets에서만 관리합니다.
-
-## v5.2.2 - 지출 조회 범위 수정
-- 신규 지출 저장 후 시트에는 반영되지만 화면 목록에 보이지 않는 문제 수정
-- `지출내역` 조회 범위를 A3:I2000 → A3:I5000으로 확장
-- 저장 시 빈 행 탐색 범위와 조회 범위를 동일하게 맞춤
-
-### v5.2.3 UI/UX 수정
-- 지출 저장 직후 전체 대시보드 재조회 대신 신규 지출 행만 즉시 목록 반영
-- 합계/정산값은 백그라운드에서 조용히 재계산
-- 메인 캐릭터의 겹쳐 보이던 기호 제거 및 단순 얼굴로 정리
-- 모바일 메인 히어로를 짧고 컴팩트한 2열 구조로 축소
-- 모든 메인 dialog 팝업에 바깥 영역 클릭 닫기 공통 적용
-
-- 2026-09-29 21:xx KST — v5.2.4 — 월 선택 유지(localStorage), 저장 직후/새로고침 후 지출목록 유지 보강, 메인 마스코트 고양이 얼굴로 수정
-
-- 2026-09-29 21:xx KST — v5.2.5 — 신규 지출/대출 월값 RAW 저장, 기존 날짜형 월값 복원 조회, 10월 데이터/대출 0원 문제 수정, 고양이 마스코트 재디자인
-
-- 2026-09-29 — v5.2.6 — 지출 카드 삭제 버튼 추가, 삭제 시 Google Sheet 지출내역 A:I 동시 삭제(값 비우기), 삭제 후 월 합계/정산 즉시 재조회
-
-- 2026-09-29 — v5.2.7 — 지출 추가/삭제·대출 수정 시 월정산 A:P 자동 재계산/저장. CE 자동이체 연도 정정: 2026-01/02 300,000원, 2026-03 이후 400,000원으로 시트까지 동기화.
-
-- 2026-09-29 — v5.2.8 — CE 자동이체 기준 연도를 2026년으로 정정. 최초 로드 시 월정산 자동 재동기화를 1회 실행하여 기존 2026년 1·2월 N열도 300,000원으로 바로 보정.
-
-- 2026-09-29 — v5.3.0 — 기준연도 2026-01~12로 정정. 대출내역/월정산의 2025-11·12 제외 및 초기 동기화 시 정리, 2026-01 이월 0원 시작, CE 자동이체 2026-01·02 30만원 / 03~12 40만원 적용. 대출금 변동추이 모달(잔액 라인차트·월별 원금/이자/금리/잔액 표) 추가.
-
-- 2026-09-29 — v5.3.1 — 월별 대출 입력 초기화 추가. 원금/이자는 빈칸=0원, 잔액 빈칸은 전월잔액-원금 자동계산. 초기화 시 전월 잔액/금리를 승계하고 월정산·대출금 변동추이를 다시 동기화.
-
-- 2026-09-29 — v5.3.2 — 지출 추가/삭제 속도 최적화: Google OAuth 토큰 캐시, 월정산 백그라운드 동기화, 저장마다 월정산 전체 clear 제거, 삭제 즉시 UI 반영
-
-- 2026-09-29 — v5.3.3 — 대출 상환후 잔액 글자 크기 보정, 조회 월 클릭형 1~12월 바로가기 패널 추가
-
-## v5.4.0 · 2026-09-29
-- 반복지출 템플릿: SETTINGS D:J에 저장, 이번 달 빠른 등록 지원
-- 월별 비교: 생활비 및 SH/JH/CE 최종 부담액 전월 대비 표시
-- 지출 수정: 지출 카드 클릭 → 수정 → Google Sheet 해당 행 즉시 갱신
-- 월별 메모: SETTINGS L:M에 월별 메모 저장
-- 월 마감: SETTINGS N열에 상태 저장, 마감된 달의 지출 추가/수정/삭제 및 대출 수정 잠금
-- 기존 지출/대출/월정산/CE 자동이체/관리자 ZIP 배포 기능 유지
-
-### v5.4.1
-- 반복지출 저장 실패 수정: SETTINGS 우측 확장 열(D:J) 대신 C3:D3 단일 JSON 저장소 사용
-- 월별 메모/마감도 SETTINGS C4:D4 단일 JSON 저장소로 이동
-- 엑셀→Google Sheets 변환 시 열 개수가 적어도 동작하도록 기존 A:D 범위 안에서만 저장
-- 반복지출 식별자를 sheetRow 대신 고유 ID로 변경
-
-
-## v5.4.2
-- Cloudflare Pages Functions build 오류 수정: `parseMonthMetaRows` export 복구
-- 월 메모/마감 조회 범위를 새 저장구조 `SETTINGS!C4:D4`로 통일
-- 반복지출 `SETTINGS!C3:D3` JSON 저장방식 유지
-- 구형 월 메타 행 형식도 읽을 수 있도록 호환 처리
-
-- 2026-09-29 — v5.4.3 — 반복지출 저장을 SETTINGS 빈 셀에서 숨김 APP_DATA 시트로 이전, 레거시 데이터 자동 마이그레이션, 저장 후 재조회 검증 추가.
-
-
-## v5.5.0 - D1 앱 데이터 분리
-- 반복지출 저장소를 Google Sheet에서 Cloudflare D1로 이전
-- 월별 메모/월 마감 상태도 Cloudflare D1로 이전
-- 실제 지출/대출/월정산은 기존 Google Sheet 유지
-- D1 테이블은 첫 API 호출 시 자동 생성
-- Cloudflare Pages D1 binding 변수명은 반드시 `DB`
-- wrangler.toml은 포함하지 않음
-
-### 최초 1회 Cloudflare 설정
-1. Cloudflare에서 D1 database `kongmoney-db` 생성
-2. Workers & Pages > kongmoney > Settings > Bindings > Add > D1 database
-3. Variable name: `DB`
-4. Database: `kongmoney-db` 선택
-5. 저장 후 프로젝트 Redeploy
-
-이전 테스트용 반복지출/월메모 데이터는 새 D1로 자동 이전하지 않습니다. D1 연결 후 다시 등록해주세요.
-
-- 2026-09-29 — v5.5.1 — D1 반복지출 저장 검증 강화, DDL 개별 실행, 저장 후 D1 재조회 확인, `/api/d1-status` 진단 엔드포인트 추가.
-
-- v5.5.2: 지출 추가의 ‘이 지출을 반복지출로 저장’ 체크 경로를 별도 2차 API 호출에서 지출 저장 API 내부의 D1 동시 저장 방식으로 변경. 저장 후 D1 재조회 검증 및 응답 반영.
-
-- v5.5.3: 반복지출 체크박스 저장 경로 캐시 문제 수정. 프론트 JS 파일명을 app-v5.5.3.js로 변경하여 강제 캐시 무효화, 서버는 checkbox 기본값 'on'도 반복지출 저장으로 인식.
-
-- v5.5.4: 지출 수정 화면의 반복지출 체크 저장 지원. 수정 저장(PUT) 시 수정된 값을 D1 반복지출로 동시 저장하고 재조회 검증.
-
-## v5.6.0 patch
-- 지출내역 저장소를 Google Sheet 실시간 쓰기 방식에서 Cloudflare D1 우선 방식으로 전환.
-- 최초 1회 기존 `지출내역` 시트의 2026년 데이터를 D1 `expenses` 테이블로 자동 이관.
-- 지출 추가/수정/삭제는 D1에서 즉시 처리하여 Google Sheets API 왕복 제거.
-- 상단 조회 월 오른쪽 액션 영역에 작은 `시트 동기화` 버튼 추가.
-- `시트 동기화` 실행 시 D1 지출 전체를 Google Sheet `지출내역` 탭에 반영하고 월정산도 갱신.
-- 대출/월정산 설정값은 기존 Google Sheet 연동 유지.
-- `/api/d1-status`에 `expensesCount`, `lastSheetSync` 진단값 추가.
-
-
-## v5.7.0 패치
-- 대출내역 저장소를 Google Sheet 실시간 쓰기에서 Cloudflare D1로 이관.
-- 최초 1회 기존 Google Sheet `대출내역`의 2026년 데이터를 D1 `loans` 테이블로 자동 마이그레이션.
-- 대출 조회/수정/초기화 및 `대출금 변동추이`를 D1 기준으로 변경.
-- 월정산 계산 시 지출/대출은 D1에서 읽고, 수고비/설정만 Google Sheet에서 읽도록 변경.
-- 상단 `시트 동기화` 버튼은 D1의 지출 + 대출을 Google Sheet에 백업하고 월정산까지 갱신.
-- `/api/d1-status`에 `loansCount` 추가.
+## 패치 파일
+- functions/api/_lib/d1.js
+- functions/api/_lib/summary-store.js (신규)
+- functions/api/_lib/settlement.js
+- functions/api/dashboard.js
+- functions/api/expenses.js
+- functions/api/loan.js
+- functions/api/sheet-sync.js
+- functions/api/d1-status.js
+- VERSION.txt
+- README.md
 
 ## 배포/커밋 내역
 <!-- AUTO_DEPLOY_HISTORY -->
+- 2026-09-30 02:56 KST — chore: kongmoney ZIP deploy 09-29-22:42 — 10개 파일 업로드
 - 2026-09-30 02:29 KST — chore: kongmoney ZIP deploy 09-29-22:42 — 12개 파일 업로드
 - 2026-09-30 02:20 KST — chore: kongmoney ZIP deploy 09-29-22:42 — 11개 파일 업로드
 - 2026-09-30 02:09 KST — chore: kongmoney ZIP deploy 09-29-22:42 — 29개 파일 업로드

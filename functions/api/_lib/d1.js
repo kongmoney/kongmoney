@@ -68,5 +68,26 @@ export async function ensureAppTables(env) {
     updated_at TEXT NOT NULL
   )`).run();
 
+  await db.prepare(`CREATE TABLE IF NOT EXISTS monthly_summary (
+    month TEXT PRIMARY KEY,
+    living REAL NOT NULL DEFAULT 0,
+    loan REAL NOT NULL DEFAULT 0,
+    total REAL NOT NULL DEFAULT 0,
+    manager_basic REAL NOT NULL DEFAULT 0,
+    member_a_basic REAL NOT NULL DEFAULT 0,
+    member_b_basic REAL NOT NULL DEFAULT 0,
+    labor_fee REAL NOT NULL DEFAULT 0,
+    manager_final REAL NOT NULL DEFAULT 0,
+    member_a_final REAL NOT NULL DEFAULT 0,
+    member_b_final REAL NOT NULL DEFAULT 0,
+    carry_in REAL NOT NULL DEFAULT 0,
+    settlement_needed REAL NOT NULL DEFAULT 0,
+    auto_transfer REAL NOT NULL DEFAULT 0,
+    month_diff REAL NOT NULL DEFAULT 0,
+    carry_out REAL NOT NULL DEFAULT 0,
+    updated_at TEXT NOT NULL
+  )`).run();
+  await db.prepare('CREATE INDEX IF NOT EXISTS idx_monthly_summary_month ON monthly_summary(month)').run();
+
   return db;
 }

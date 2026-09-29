@@ -1,6 +1,7 @@
 import { json, bad } from './_lib/http.js';
 import { assertMonthOpen } from './_lib/monthmeta.js';
 import { getLoan, getPreviousLoan, upsertLoan } from './_lib/loan-store.js';
+import { recalculateMonthlySummaryFrom } from './_lib/summary-store.js';
 
 const n = (v) => {
   const x = Number(v);
@@ -34,6 +35,7 @@ export async function onRequestPut({ request, env }) {
       memberAShare: total / 2,
       note: current?.note || '',
     });
+    await recalculateMonthlySummaryFrom(env, month);
     return json({ ok: true, mode: current ? 'updated' : 'inserted', ...saved }, current ? 200 : 201);
   } catch (err) {
     return bad(err?.message || 'loan update error', err?.status || 500);
@@ -61,6 +63,7 @@ export async function onRequestDelete({ request, env }) {
       memberAShare: 0,
       note: '',
     });
+    await recalculateMonthlySummaryFrom(env, month);
     return json({ ok: true, mode: 'reset', ...saved });
   } catch (err) {
     return bad(err?.message || 'loan reset error', err?.status || 500);

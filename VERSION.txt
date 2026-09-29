@@ -1,1 +1,1 @@
-kongmoney-v5.7.0-loans-d1
+kongmoney-v5.8.0-monthly-summary-d1-cache
